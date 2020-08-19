@@ -1,0 +1,20 @@
+{
+  "name": "envomer/php-laravel-api",
+  "require": {
+    "php": "^7.2.5",
+    "ext-dom": "*",
+    "ext-json": "*"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "autoload": {
+    "psr-4": {
+      "API\\": "src/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

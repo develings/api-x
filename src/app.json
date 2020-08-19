@@ -1,0 +1,134 @@
+{
+    "name": "App",
+    "version": "1.0",
+    "description": "A demo application using the API library",
+    "endpoint": "/api/v1.0/",
+    "db_prefix": "",
+    "authentication": "basic",
+    "events": true,
+    "api": [
+        {
+            "name": "user",
+            "db": "users",
+            "timestamps": true,
+            "soft_deletes": true,
+            "authenticate": true,
+            "permission": true,
+            "identifier": "id",
+            "per_page": 10,
+            "order_by": "id desc",
+            "fields": {
+                "id": "id",
+                "email": "string:64|unique|index|email",
+                "username": "string|unique|index",
+                "remember_token": "string|default:uuid",
+                "password": "string|password|hidden",
+                "user_id": "string|default:alphanumeric,12",
+                "client_id": "integer",
+                "log_count": "tinyInteger",
+                "level": "boolean",
+                "two_factor_auth": "tinyInteger"
+            },
+            "searchable": "username,email",
+            "relations": {
+                "client": "belongsTo:client,client_id|required",
+                "info": "hasOne:user_info,id,user_id"
+            },
+
+            "create": {
+                "fields": "name,email,password:hash,api_token:hash",
+                "check": "email|username",
+                "before": "",
+                "after": ""
+            },
+            "update": {
+                "fields": "name,email,password:hash"
+            }
+        },
+
+        {
+            "name": "client",
+            "db": "clients",
+            "timestamps": true,
+            "authenticate": true,
+            "order_by": "id desc",
+            "fields": {
+                "id": "id",
+                "name": "string",
+                "customer_id": "string|default:alphanumeric,8",
+                "user_id": "integer|default:auth",
+                "created_at": "datetime|cast:timestamp"
+            },
+            "permission": true,
+            "relations": {
+                "users": "hasMany:user,id,client_id",
+                "portals": "hasOne:portal,id,client_id"
+            },
+            "create": {
+                "fields": "name",
+                "before": "",
+                "after": "",
+                "validate": ""
+            },
+            "update": {
+                "fields": "name"
+            }
+        },
+
+        {
+            "name": "role",
+            "authenticate": true,
+            "fields": {
+                "id": "id",
+                "name": "string"
+            },
+            "relations": {
+                "users": "belongsToMany:user"
+            }
+        },
+
+        {
+            "name": "user_info",
+            "fields": {
+                "id": "id",
+                "first_name": "string",
+                "user_id": "integer|unique"
+            },
+            "permission": true,
+            "relations": {
+                "user": "belongsTo:user"
+            }
+        },
+
+        {
+            "name": "portal",
+            "db": "cc_portals",
+            "timestamps": true,
+            "soft_deletes": true,
+            "authenticate": true,
+            "fields": {
+                "id": "id",
+                "name": "string",
+                "domain": "string",
+                "description": "string"
+            },
+            "permission": true,
+            "relations": {
+
+            },
+            "create": {
+                "fields": "name,email,password:hash,api_token:hash",
+                "before": "",
+                "after": "",
+                "validate": ""
+            },
+            "update": {
+                "fields": "name,email,password:hash"
+            }
+        }
+    ]
+}
+
+
+
+
