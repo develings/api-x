@@ -15,6 +15,12 @@
       "API\\": "src/"
     }
   },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/envomer/php-laravel-api.git"
+    }
+  ],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
