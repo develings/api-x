@@ -1,10 +1,10 @@
 <?php
 
-namespace App\API\Definition;
+namespace API\Definition;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
-use App\API\Definition\Base;
+use API\Definition\Base;
 
 class Relation
 {

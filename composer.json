@@ -1,26 +1,24 @@
 {
-  "name": "envomer/php-laravel-api",
-  "require": {
-    "php": "^7.2.5",
-    "ext-dom": "*",
-    "ext-json": "*"
-  },
-  "config": {
-    "optimize-autoloader": true,
-    "preferred-install": "dist",
-    "sort-packages": true
-  },
-  "autoload": {
-    "psr-4": {
-      "API\\": "src/"
-    }
-  },
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/envomer/php-laravel-api.git"
-    }
-  ],
-  "minimum-stability": "dev",
-  "prefer-stable": true
+    "name": "envomer/php-laravel-api",
+    "authors": [
+        {
+            "name": "Omer Mohamed Ali",
+            "email": "omer.envo@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.2.5",
+        "ext-dom": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "API\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

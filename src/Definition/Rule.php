@@ -1,6 +1,6 @@
 <?php
 
-namespace App\API\Definition;
+namespace API\Definition;
 
 class Rule
 {

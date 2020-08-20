@@ -1,6 +1,6 @@
 <?php
 
-namespace App\API;
+namespace API;
 
 class DynamicModel extends \Illuminate\Database\Eloquent\Model
 {

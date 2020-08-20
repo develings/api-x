@@ -1,9 +1,9 @@
 <?php
 
-namespace App\API;
+namespace API;
 
-use App\API\Definition\Base;
-use App\API\Definition\Endpoint;
+use API\Definition\Base;
+use API\Definition\Endpoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -20,17 +20,21 @@ class API
      */
     public $base;
 
-    public function __construct()
+    public function __construct(string $path)
     {
-        $data = file_get_contents(base_path('api/app.json'));
+        \abort_unless(file_exists($path), 500, "Path given not found");
+        
+        $data = file_get_contents($path);
         $data = json_decode($data, 1);
+        
+        \abort_unless($data, 505, "JSON file is empty or not valid");
 
         $this->definition = $data;
 
         $this->db = new Database($data);
         $this->base = new Base($data);
 
-        app()->instance(Base::class, $this);
+        app()->instance(self::class, $this);
     }
 
     public function do()
@@ -53,21 +57,25 @@ class API
         $model = new Model($this->definition);
         $model->createModel($this->definition['api'][0]);
     }
+    
+    public function openApiJson()
+    {
+        $openAPI = new OpenAPI($this->base);
+        return $openAPI->definition();
+    }
 
 	public function setRoutes()
     {
         $prefix = $this->base->endpoint ?: '';
 
-        //$this->setModels();
-        $openAPI = new OpenAPI();
-        $openAPI->createOpenApiJson($this->base);
+        Route::get('api.json', '\API\Routes@getOpenApiJson');
 
-        Route::middleware('throttle:60,1')->prefix($prefix)->group(function() {
-            Route::get('{api}', '\App\API\API@index')->name('api.index');
-            Route::post('{api}', '\App\API\API@create')->name('api.create');
-            Route::get('{api}/{id}', '\App\API\API@get')->name('api.get');
-            Route::put('{api}/{id}', '\App\API\API@put')->name('api.put');
-            Route::delete('{api}/{id}', '\App\API\API@delete')->name('api.delete');
+        Route::group(['prefix' => $prefix], function() {
+            Route::get('{api}', ['as' => 'api.index', 'uses' => '\API\Routes@index']);
+            Route::post('{api}', ['as' => 'api.create', 'uses' => '\API\Routes@create']);
+            Route::get('{api}/{id}', ['as' => 'api.get', 'uses' => '\API\Routes@get']);
+            Route::put('{api}/{id}', ['as' => 'api.put', 'uses' => '\API\Routes@put']);
+            Route::delete('{api}/{id}', ['as' => 'api.delete', 'uses' => '\API\Routes@delete']);
         });
     }
 

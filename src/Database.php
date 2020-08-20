@@ -1,6 +1,6 @@
 <?php
 
-namespace App\API;
+namespace API;
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

@@ -1,13 +1,28 @@
 <?php
 
-namespace App\API;
+namespace API;
 
-use App\API\Definition\Base;
+use API\Definition\Base;
 use Illuminate\Support\Facades\File;
 
 class OpenAPI
 {
-    public function createOpenApiJson(Base $base)
+    /**
+     * @var Base
+     */
+    public $base;
+    
+    /**
+     * OpenAPI constructor.
+     *
+     * @param $base
+     */
+    public function __construct(Base $base)
+    {
+        $this->base = $base;
+    }
+    
+    public function definition()
     {
         $data = [
             'openapi' => '3.0.2',
@@ -17,7 +32,7 @@ class OpenAPI
             ],
             'servers' => [
                 [
-                    'url' => config('app.url') . ($base->endpoint ?? '')
+                    'url' => config('app.url') . ($this->base->endpoint ?? '')
                 ]
             ],
             'paths' => [],
@@ -27,9 +42,9 @@ class OpenAPI
             'tags' => []
         ];
 
-        abort_unless($base->api, 500, 'Invalid API json file');
+        abort_unless($this->base->api, 500, 'Invalid API json file');
 
-        foreach ($base->api as $key => $api) {
+        foreach ($this->base->api as $key => $api) {
             $tags = [
                 $key
             ];
@@ -251,7 +266,11 @@ class OpenAPI
         }
 
         return $data;
-        File::put(public_path('openapi.json'), json_encode($data, JSON_PRETTY_PRINT));
+    }
+    
+    public function save(string $path)
+    {
+        return File::put($path, json_encode($this->definition(), JSON_PRETTY_PRINT));
     }
 
 }

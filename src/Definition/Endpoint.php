@@ -1,8 +1,8 @@
 <?php
 
-namespace App\API\Definition;
+namespace API\Definition;
 
-use App\API\API;
+use API\API;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;

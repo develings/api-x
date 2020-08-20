@@ -1,6 +1,6 @@
 <?php
 
-namespace App\API;
+namespace API;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
