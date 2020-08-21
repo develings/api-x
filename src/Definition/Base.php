@@ -26,6 +26,11 @@ class Base
     public $throttle;
 
     public $rate_limit;
+    
+    /**
+     * @var DB
+     */
+    public $db;
 
     public function __construct(array $data)
     {
@@ -38,9 +43,17 @@ class Base
                     }
                     $value = $apis;
                 }
+    
+                if ($key === 'db') {
+                    $value = new DB($value);
+                }
 
                 $this->$key = $value;
             }
+        }
+        
+        if (!$this->db) {
+            $this->db = new DB();
         }
     }
 }

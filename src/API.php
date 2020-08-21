@@ -4,6 +4,7 @@ namespace API;
 
 use API\Definition\Base;
 use API\Definition\Endpoint;
+use BaoPham\DynamoDb\Facades\DynamoDb;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,10 @@ class API
 {
     public $definition;
     public $apis;
+    
+    /**
+     * @var Database
+     */
     public $db;
 
     /**
@@ -87,11 +92,11 @@ class API
         abort_unless($api, 404);
 
         /** @var Endpoint $api */
-        $tableName = $this->db->getTableName($api->db ?? $api->name);
         //$page = $request->get('page', 1);
         $perPage = $request->get('per_page', $api->per_page ?? 25);
 
-        $query = DB::table($tableName);
+        $query = $this->getBuilder($api);
+        //$query = DB::table($tableName);
 
         if ($api->order_by) {
             $query->orderByRaw($api->order_by);
@@ -382,5 +387,26 @@ class API
         }
 
         return $items;
+    }
+    
+    public function getBuilder(Endpoint $endpoint)
+    {
+        $tableName = $this->getTableName($endpoint);
+        
+        if ($this->base->db->driver === 'dynamoDB') {
+            $model = DynamoModel::createInstance($tableName);
+            $model = new DynamoBuilder($model);
+        } else {
+            $model = DB::table($tableName);
+        }
+        
+        return $model;
+    }
+    
+    public function getTableName(Endpoint $endpoint)
+    {
+        $prefix = $this->base->db->prefix ?? '';
+    
+        return $prefix . ($endpoint->db ?? $endpoint->name);
     }
 }
