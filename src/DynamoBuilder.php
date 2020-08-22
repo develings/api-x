@@ -21,10 +21,14 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
     public function paginate($perPage)
     {
         $this->limit($perPage);
-        $items = $this->get();
+        $items = $this->toArray();
+        
+        //$items = !$items ? $items : $items;
+        
+        $api = app()->get(API::class);
         
         $paginator = new Paginator($items, $perPage);
-        $paginator->setPath(env('APP_URL') . '');
+        $paginator->setPath(env('APP_URL') . $api->base->endpoint);
         
         return $paginator;
     }

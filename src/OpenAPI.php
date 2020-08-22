@@ -51,7 +51,7 @@ class OpenAPI
 
             $getParameters = [
                 [
-                    'in' => 'path',
+                    'in' => 'query',
                     'name' => 'search',
                     'required' => false,
                     'schema' => [
@@ -59,7 +59,7 @@ class OpenAPI
                     ]
                 ],
                 [
-                    'in' => 'path',
+                    'in' => 'query',
                     'name' => 'page',
                     'required' => false,
                     'schema' => [
@@ -68,7 +68,7 @@ class OpenAPI
                     ]
                 ],
                 [
-                    'in' => 'path',
+                    'in' => 'query',
                     'name' => 'per_page',
                     'required' => false,
                     'schema' => [
@@ -83,7 +83,7 @@ class OpenAPI
                 $relationKeys = $relationKeys ? implode(', ', $relationKeys) : '';
 
                 $getParameters[] = [
-                    'in' => 'path',
+                    'in' => 'query',
                     'name' => 'with',
                     'required' => false,
                     'description' => 'Provide a list of relations for the entity, separated by comma. Possible values: ' . $relationKeys,

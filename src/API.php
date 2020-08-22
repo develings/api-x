@@ -120,7 +120,7 @@ class API
         }
 
         $data = $query->paginate($perPage);
-
+        
         $items = $api->dataHydrateItems($data->items());
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
 
