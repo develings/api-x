@@ -27,7 +27,7 @@ class Table
      * @var string
      */
     private $billingMode = self::BILLING_TYPE_PROVISIONED;
-    private $tags;
+    private $tags = [];
     
     public const TYPE_STRING = 'S';
     public const TYPE_NUMBER = 'N';
@@ -235,7 +235,10 @@ class Table
             'TableName' => $this->tableName,
             'KeySchema' => $this->keySchema,
             'BillingType' => $this->billingMode,
-            'ProvisionedThroughput' => '',
+            'ProvisionedThroughput' => [
+                'ReadCapacityUnits' => $this->readCapacityUnits,
+                'WriteCapacityUnits' => $this->writeCapacityUnits,
+            ],
             'StreamSpecification' => [
                 'StreamEnabled' => $this->streamEnabled,
                 'StreamViewType' => $this->streamViewType,

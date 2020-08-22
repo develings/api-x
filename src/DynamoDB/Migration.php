@@ -26,20 +26,24 @@ class Migration
         $this->client = App::make('aws')->createClient('dynamodb', $this->config = $config);
     }
     
+    /**
+     * @param Base $base
+     *
+     * @return Table[]
+     */
     public function getDefinition(Base $base)
     {
         $definitions = [];
         foreach ($base->api as $api) {
             $definition = new Table($base->getTableName($api));
             $field = $api->getField($api->getIdentifier());
-            dd($field);
-            $definition->addKey();
-            dd($definition);
+            abort_unless($field, 500, 'Field is missing for API endpoint');
+            
+            $definition->addKey($field->key, Table::KEY_TYPE_HASH);
+            $definition->addAttribute($field->key, Table::TYPE_STRING);
             
             $definitions[] = $definition;
         }
-        
-        dd($definitions);
         
         return $definitions;
     }
@@ -48,11 +52,22 @@ class Migration
     {
         $definition = $this->getDefinition($base);
         
-        dd($definition);
+        $tables = [];
+        foreach ($definition as $table) {
+            $tables[$table->getTableName()] = $this->create($table);
+        }
+        
+        return $tables;
     }
     
+    public function create(Table $table)
+    {
+        $data = $table->toArray();
+        
+        return $this->client->createTable($data);
+    }
     
-    public function create(string $name, array $definition = [])
+    public function createOld(string $name, array $definition = [])
     {
         foreach($tables as $basic => $table) {
             $path = join(DIRECTORY_SEPARATOR, [base_path(), 'database', 'schemas', $table . '.json']);
