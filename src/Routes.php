@@ -31,4 +31,9 @@ class Routes
         return $this->api->index($api, $request);
     }
     
+    public function migrate(Request $request)
+    {
+        return $this->api->migrate();
+    }
+    
 }

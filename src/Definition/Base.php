@@ -56,4 +56,11 @@ class Base
             $this->db = new DB();
         }
     }
+    
+    public function getTableName(Endpoint $endpoint)
+    {
+        $prefix = $this->db->prefix ?? '';
+        
+        return $prefix . ($endpoint->getTableName());
+    }
 }

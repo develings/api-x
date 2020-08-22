@@ -56,6 +56,16 @@ class API
 
 		//dd($data, json_last_error(), json_last_error_msg());
 	}
+	
+	public function migrate()
+    {
+        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+            $migration = new \API\DynamoDB\Migration();
+            dd($migration->migrate($this->base));
+        }
+        
+        dd('mysq');
+    }
 
 	public function setModels()
     {
@@ -74,6 +84,7 @@ class API
         $prefix = $this->base->endpoint ?: '';
 
         Route::get('api.json', '\API\Routes@getOpenApiJson');
+        Route::get('migrate', '\API\Routes@migrate');
 
         Route::group(['prefix' => $prefix], function() {
             Route::get('{api}', ['as' => 'api.index', 'uses' => '\API\Routes@index']);
@@ -391,7 +402,7 @@ class API
     
     public function getBuilder(Endpoint $endpoint)
     {
-        $tableName = $this->getTableName($endpoint);
+        $tableName = $this->base->getTableName($endpoint);
         
         if ($this->base->db->driver === 'dynamoDB') {
             $model = DynamoModel::createInstance($tableName);
@@ -401,12 +412,5 @@ class API
         }
         
         return $model;
-    }
-    
-    public function getTableName(Endpoint $endpoint)
-    {
-        $prefix = $this->base->db->prefix ?? '';
-    
-        return $prefix . ($endpoint->db ?? $endpoint->name);
     }
 }

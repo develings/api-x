@@ -258,4 +258,9 @@ class Endpoint
     {
         return $this->relations ? array_keys($this->relations) : null;
     }
+    
+    public function getField(string $name)
+    {
+        return $this->fields[$name];
+    }
 }
