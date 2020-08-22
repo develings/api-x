@@ -88,7 +88,7 @@ class API
 
         Route::group(['prefix' => $prefix], function() {
             Route::get('{api}', ['as' => 'api.index', 'uses' => '\API\Routes@index']);
-            Route::post('{api}', ['as' => 'api.create', 'uses' => '\API\Routes@create']);
+            Route::post('{api}', ['as' => 'api.post', 'uses' => '\API\Routes@post']);
             Route::get('{api}/{id}', ['as' => 'api.get', 'uses' => '\API\Routes@get']);
             Route::put('{api}/{id}', ['as' => 'api.put', 'uses' => '\API\Routes@put']);
             Route::delete('{api}/{id}', ['as' => 'api.delete', 'uses' => '\API\Routes@delete']);
@@ -171,7 +171,7 @@ class API
         return $api->addRelations($data, $request->get('with'));
     }
 
-    public function create($name, Request $request)
+    public function post($name, Request $request)
     {
         // check if authentication is required
 
@@ -199,8 +199,10 @@ class API
         }
 
         $data = $validation->validated();
-        $model = $api->createModelInstance();
+        $model = $this->getBuilder($api);
+        //$model = $api->createModelInstance();
 
+        dd($model);
         $data = $api->fillDefaultValues($data);
 
         if ($model) {

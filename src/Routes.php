@@ -36,4 +36,24 @@ class Routes
         return $this->api->migrate();
     }
     
+    public function post($api, Request $request)
+    {
+        return $this->api->post($api, $request);
+    }
+    
+    public function get($api, $id, Request $request)
+    {
+        return $this->api->get($api, $id, $request);
+    }
+    
+    public function put($api, $id, Request $request)
+    {
+        return $this->api->put($api, $id, $request);
+    }
+    
+    public function delete($api, $id, Request $request)
+    {
+        return $this->api->delete($api, $id, $request);
+    }
+    
 }
