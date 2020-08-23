@@ -143,9 +143,9 @@ class API
 
     public function find(Endpoint $api, $id)
     {
-        $model = $api->createModelInstance();
+        $model = $this->getBuilder($api);
         if ($model) {
-            $query = $model::where($api->getIdentifier(), $id);
+            $query = $model->where($api->getIdentifier(), $id);
         } else {
             $query = DB::table($api->getTableName())->where($api->getIdentifier(), $id);
         }
@@ -162,13 +162,8 @@ class API
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
-
-        $entity = $this->find($api, $id);
-        abort_unless($entity, 404);
-
-        $data = $api->dataHydrate($entity);
-
-        return $api->addRelations($data, $request->get('with'));
+    
+        return $this->findOne($api, $id, $request);
     }
 
     public function post($name, Request $request)
@@ -208,25 +203,18 @@ class API
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
 
-            $$model->saveOrFail();
-            dd($model);
-            $modelId = $model->{$api->identifier};
+            $model->saveOrFail();
+            $id = $model->{$api->getIdentifier()};
         } else {
-            $modelId = DB::table($api->getTableName())->insertGetId(
+            $id = DB::table($api->getTableName())->insertGetId(
                 $data
             );
         }
 
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
-
-        $entity = $this->find($api, $modelId);
-
-        abort_unless($entity, 404);
-
-        $data = $api->dataHydrate((array) $entity);
-
-        return $api->addRelations($data, $request->get('with'));
+    
+        return $this->findOne($api, $id, $request);
 
         dd($rules, $inserted, $model->toArray());
     }
@@ -280,24 +268,13 @@ class API
             $model->fill($data);
 
             $model->update();
-            $modelId = $model->{$api->identifier};
         } else {
             $affected = DB::table($api->getTableName())
                 ->where($api->getIdentifier(), $id)
                 ->update($data);
         }
-
-        $entity = $this->find($api, $id);
-        abort_unless($entity, 404);
-
-        // TODO create method that finds an entity
-        // TODO create a 'get' method to retrieve an entity
-
-        $data = $api->dataHydrate($entity);
-
-        return $api->addRelations($data, $request->get('with'));
-
-        dd($rules, $inserted, $model->toArray());
+    
+        return $this->findOne($api, $id, $request);
     }
 
     public function delete($name, $id, Request $request)
@@ -428,5 +405,22 @@ class API
         }
     
         return $model;
+    }
+    
+    /**
+     * @param Endpoint $api
+     * @param $id
+     * @param Request $request
+     *
+     * @return array|mixed|null
+     */
+    private function findOne(Endpoint $api, $id, Request $request)
+    {
+        $entity = $this->find($api, $id);
+        abort_unless($entity, 404);
+        
+        $data = $api->dataHydrate($entity);
+        
+        return $api->addRelations($data, $request->get('with'));
     }
 }
