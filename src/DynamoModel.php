@@ -15,6 +15,13 @@ class DynamoModel extends \BaoPham\DynamoDb\DynamoDbModel
     public function items()
     {
         $items = $this->get();
-        dd('items', $items);
+        return $items;
+    }
+    
+    public function fill(array $data)
+    {
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
     }
 }

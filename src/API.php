@@ -174,7 +174,6 @@ class API
     public function post($name, Request $request)
     {
         // check if authentication is required
-
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
@@ -199,17 +198,18 @@ class API
         }
 
         $data = $validation->validated();
-        $model = $this->getBuilder($api);
-        //$model = $api->createModelInstance();
+        //$model = $this->getBuilder($api);
+        $model = $this->createModelInstance($api);
 
-        dd($model);
         $data = $api->fillDefaultValues($data);
 
         if ($model) {
-            $data = array_intersect_key($data, array_flip($model->getFillable()));
+            $fillables = $model->getFillable();
+            $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
 
-            $model->saveOrFail();
+            $$model->saveOrFail();
+            dd($model);
             $modelId = $model->{$api->identifier};
         } else {
             $modelId = DB::table($api->getTableName())->insertGetId(
@@ -413,6 +413,20 @@ class API
             $model = DB::table($tableName);
         }
         
+        return $model;
+    }
+    
+    public function createModelInstance(Endpoint $endpoint)
+    {
+        $tableName = $this->base->getTableName($endpoint);
+    
+        if ($this->base->db->driver === 'dynamoDB') {
+            $model = DynamoModel::createInstance($tableName);
+            //$model = new DynamoBuilder($model);
+        } else {
+            $model = DB::table($tableName);
+        }
+    
         return $model;
     }
 }

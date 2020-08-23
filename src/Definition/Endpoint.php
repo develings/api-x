@@ -81,9 +81,21 @@ class Endpoint
 
         $validators = [];
         foreach ($validationMethods as $validationMethod) {
+            if (strpos($validationMethod, 'validate') === false) {
+                continue;
+            }
             $validators[] = Str::replaceFirst('validate_', '', Str::snake($validationMethod));
         }
-
+        
+        /** @var API $base */
+        $api = app()->get(API::class);
+        
+        if ($api->base->db->driver === DB::DRIVER_DYNAMO_DB) {
+            $validators = array_values(array_diff($validators, ([
+                'unique', 'exists', 'get_query_column', 'guess_column_for_query'
+            ])));
+        }
+        
         $definitions = [];
         foreach ($this->fields as $key => $field) {
             $rules = $field->getRules();
@@ -102,6 +114,10 @@ class Endpoint
                 }
 
                 $def .= ($def ? '|' : '') . $path;
+            }
+            
+            if (!$def) {
+                continue;
             }
 
             $definitions[$key] = $def;
@@ -164,6 +180,8 @@ class Endpoint
             $parameterMethod = $parameters[0] ?? null;
             if ($parameterMethod === 'alphanumeric') {
                 $data[$key] = Str::random($parameters[1] ?? 12);
+            } else if ($parameterMethod === 'uuid') {
+                $data[$key] = Str::uuid()->toString();
             } else {
                 $data[$key] = $parameterMethod;
             }
