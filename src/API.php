@@ -176,7 +176,7 @@ class API
         // Check permission if enabled
 
         // Validate the data from within api fields
-        $rules = $api->getValidationRules();
+        $rules = $api->getValidationRules(Endpoint::REQUEST_POST);
 
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
@@ -196,7 +196,7 @@ class API
         //$model = $this->getBuilder($api);
         $model = $this->createModelInstance($api);
 
-        $data = $api->fillDefaultValues($data);
+        $data = $api->fillDefaultValues($data, Endpoint::REQUEST_POST);
 
         if ($model) {
             $fillables = $model->getFillable();
@@ -224,16 +224,12 @@ class API
         // check if authentication is required
 
         /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
-
-        $entity = $this->find($api, $id);
-        abort_unless($entity, 404);
-
+        $api = $this->findOrFail($name, $id);
+    
         // Check permission if enabled
 
         // Validate the data from within api fields
-        $rules = $api->getValidationRules();
+        $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
 
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
@@ -255,7 +251,7 @@ class API
         $model = $api->createModelInstance();
 
         // compare and only fill data that is empty
-        //$data = $api->fillDefaultValues($data);
+        $data = $api->fillDefaultValues($data, Endpoint::REQUEST_PUT);
         // Unset values that should be changeable like ID
         unset($data[$api->getIdentifier()]);
 
@@ -279,13 +275,8 @@ class API
 
     public function delete($name, $id, Request $request)
     {
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
-
-        $entity = $this->find($api, $id);
-        abort_unless($entity, 404);
-
+        $api = $this->findOrFail($name, $id);
+    
         // Distinguish between model and normal db
 
         $model = $api->createModelInstance();
@@ -422,5 +413,23 @@ class API
         $data = $api->dataHydrate($entity);
         
         return $api->addRelations($data, $request->get('with'));
+    }
+    
+    /**
+     * @param $name
+     * @param $id
+     *
+     * @return Endpoint
+     */
+    private function findOrFail($name, $id): Endpoint
+    {
+        /** @var Endpoint $api */
+        $api = $this->getEndpoint($name);
+        abort_unless($api, 404);
+        
+        $entity = $this->find($api, $id);
+        abort_unless($entity, 404);
+        
+        return $api;
     }
 }

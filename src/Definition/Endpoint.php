@@ -11,6 +11,9 @@ use Illuminate\Validation\Concerns\ValidatesAttributes;
 
 class Endpoint
 {
+    const REQUEST_POST = 'post';
+    const REQUEST_PUT = 'put';
+    
     public $name;
 
     public $model;
@@ -75,7 +78,7 @@ class Endpoint
         }
     }
 
-    public function getValidationRules()
+    public function getValidationRules($request = self::REQUEST_POST)
     {
         $validationMethods = get_class_methods(ValidatesAttributes::class);
 
@@ -111,6 +114,10 @@ class Endpoint
                 $path = $rule->name;
                 if ($name === 'unique' && !$rule->parameters) {
                     $path .= ':' . $this->db;
+                }
+                
+                if ($name === 'create_ignore' && $request === self::REQUEST_POST) {
+                    continue;
                 }
 
                 $def .= ($def ? '|' : '') . $path;
@@ -153,9 +160,9 @@ class Endpoint
         return null;
     }
 
-    public function fillDefaultValues(array $data)
+    public function fillDefaultValues(array $data, $request = self::REQUEST_POST)
     {
-        if ($this->timestamps) {
+        if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
         }
 
