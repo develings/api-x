@@ -4,12 +4,13 @@ namespace API\DynamoDB;
 
 use API\Definition\Base;
 use Aws\AwsClient;
+use Aws\DynamoDb\DynamoDbClient;
 use Illuminate\Support\Facades\App;
 
-class Migration
+class Migrator
 {
     /**
-     * @var AwsClient
+     * @var DynamoDbClient
      */
     private $client;
     
@@ -48,12 +49,27 @@ class Migration
         return $definitions;
     }
     
+    public function getTables()
+    {
+        $tablesExist = $this->client->listTables();
+        
+        return $tablesExist->get('TableNames');
+    }
+    
     public function migrate(Base $base)
     {
         $definition = $this->getDefinition($base);
         
         $tables = [];
+        
+        $migrated = $this->getTables();
+        
         foreach ($definition as $table) {
+            
+            if($migrated && in_array($table, $migrated, true)) {
+                continue;
+            }
+            
             $tables[$table->getTableName()] = $this->create($table);
         }
         

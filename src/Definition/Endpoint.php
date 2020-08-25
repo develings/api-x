@@ -165,6 +165,10 @@ class Endpoint
         if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
         }
+    
+        if ($this->soft_deletes && $request === self::REQUEST_POST) {
+            $data['deleted_at'] = null;
+        }
 
         foreach ($this->fields as $key => $field) {
             if ( isset($field->rules['id'], $data[ $field->key ]) ) {
@@ -178,11 +182,16 @@ class Endpoint
             }
 
             $default = $field->getDefault();
+            
 
             if (!$default) {
                 continue;
             }
 
+            if ($request === self::REQUEST_PUT && isset($data[$key])) {
+                continue;
+            }
+            
             $parameters = $default->parameters;
             $parameterMethod = $parameters[0] ?? null;
             if ($parameterMethod === 'alphanumeric') {

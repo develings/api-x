@@ -60,7 +60,7 @@ class API
 	public function migrate()
     {
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
-            $migration = new \API\DynamoDB\Migration();
+            $migration = new \API\DynamoDB\Migrator();
             dd($migration->migrate($this->base));
         }
         
@@ -154,7 +154,7 @@ class API
             $query->whereNull('deleted_at');
         }
 
-        return $query->first();
+        return $query->get()->first();
     }
 
     public function get($name, $id, Request $request)
@@ -210,7 +210,7 @@ class API
                 $data
             );
         }
-
+        
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
     
@@ -224,7 +224,11 @@ class API
         // check if authentication is required
 
         /** @var Endpoint $api */
-        $api = $this->findOrFail($name, $id);
+        $api = $this->getEndpoint($name);
+        abort_unless($api, 404);
+    
+        $entity = $this->find($api, $id);
+        abort_unless($entity, 404);
     
         // Check permission if enabled
 
@@ -248,22 +252,26 @@ class API
         $data = $validation->validated();
         abort_unless($data, 400, 'No data set');
 
-        $model = $api->createModelInstance();
-
+        $model = $this->createModelInstance($api);
+        
+        $data = array_merge($entity->toArray(), $data);
         // compare and only fill data that is empty
         $data = $api->fillDefaultValues($data, Endpoint::REQUEST_PUT);
-        // Unset values that should be changeable like ID
-        unset($data[$api->getIdentifier()]);
-
+        
+        // Unset values that should be unchangeable like ID
+        //unset($data[$api->getIdentifier()]);
+        
         if ($api->timestamps) {
             $data['updated_at'] = date('Y-m-d H:i:s');
         }
+        
+        //dd($data);
 
         if ($model) {
-            $data = array_intersect_key($data, array_flip($model->getFillable()));
-            $model->fill($data);
-
-            $model->update();
+            if ($model->getFillable()) {
+                $data = array_intersect_key($data, array_flip($model->getFillable()));
+            }
+            $entity->update($data);
         } else {
             $affected = DB::table($api->getTableName())
                 ->where($api->getIdentifier(), $id)
@@ -430,6 +438,6 @@ class API
         $entity = $this->find($api, $id);
         abort_unless($entity, 404);
         
-        return $api;
+        return $entity;
     }
 }

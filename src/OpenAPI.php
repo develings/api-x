@@ -24,17 +24,27 @@ class OpenAPI
     
     public function definition()
     {
+        $servers = [
+            [
+                'url' => config('app.url') . ($this->base->endpoint ?? ''),
+            ]
+        ];
+        
+        if ($this->base->servers) {
+            $servers = $this->base->servers;
+        }
+        
+        foreach ($servers as $i => $server) {
+            $servers[$i]['url'] .= $this->base->endpoint;
+        }
+        
         $data = [
             'openapi' => '3.0.2',
             'info' => [
                 'title' => config('app.name'),
                 'version' => config('app.version', '1.0.0')
             ],
-            'servers' => [
-                [
-                    'url' => config('app.url') . ($this->base->endpoint ?? '')
-                ]
-            ],
+            'servers' => $servers,
             'paths' => [],
             'components' => [
                 'schemas' => []

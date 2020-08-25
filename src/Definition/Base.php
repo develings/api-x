@@ -31,6 +31,8 @@ class Base
      * @var DB
      */
     public $db;
+    
+    public $servers;
 
     public function __construct(array $data)
     {
