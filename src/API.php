@@ -4,7 +4,7 @@ namespace API;
 
 use API\Definition\Base;
 use API\Definition\Endpoint;
-use BaoPham\DynamoDb\Facades\DynamoDb;
+use API\DynamoDB\Migrator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -27,12 +27,12 @@ class API
 
     public function __construct(string $path)
     {
-        \abort_unless(file_exists($path), 500, "Path given not found");
+        abort_unless(file_exists($path), 500, "Path given not found");
         
         $data = file_get_contents($path);
         $data = json_decode($data, 1);
         
-        \abort_unless($data, 505, "JSON file is empty or not valid");
+        abort_unless($data, 505, "JSON file is empty or not valid");
 
         $this->definition = $data;
 
@@ -59,8 +59,8 @@ class API
 	
 	public function migrate()
     {
-        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
-            $migration = new \API\DynamoDB\Migrator();
+        if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
+            $migration = new Migrator();
             dd($migration->migrate($this->base));
         }
         
@@ -151,7 +151,15 @@ class API
         }
 
         if ($api->soft_deletes) {
-            $query->whereNull('deleted_at');
+            if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
+                $query->orWhere(function($query) {
+                    $query->where('deleted_at', '');
+                    $query->orWhereNull('deleted_at');
+                });
+                //dd($query->get());
+            } else {
+                $query->whereNull('deleted_at');
+            }
         }
 
         return $query->get()->first();
@@ -197,12 +205,12 @@ class API
         $model = $this->createModelInstance($api);
 
         $data = $api->fillDefaultValues($data, Endpoint::REQUEST_POST);
-
+        
         if ($model) {
             $fillables = $model->getFillable();
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
-
+            
             $model->saveOrFail();
             $id = $model->{$api->getIdentifier()};
         } else {
@@ -215,8 +223,6 @@ class API
         // TODO create a 'get' method to retrieve an entity
     
         return $this->findOne($api, $id, $request);
-
-        dd($rules, $inserted, $model->toArray());
     }
 
     public function put($name, $id, Request $request)
@@ -273,7 +279,7 @@ class API
             }
             $entity->update($data);
         } else {
-            $affected = DB::table($api->getTableName())
+            DB::table($api->getTableName())
                 ->where($api->getIdentifier(), $id)
                 ->update($data);
         }
@@ -283,11 +289,17 @@ class API
 
     public function delete($name, $id, Request $request)
     {
-        $api = $this->findOrFail($name, $id);
+        /** @var Endpoint $api */
+        $api = $this->getEndpoint($name);
+        abort_unless($api, 404);
+    
+        $entity = $this->find($api, $id);
+        abort_unless($entity, 404);
     
         // Distinguish between model and normal db
 
-        $model = $api->createModelInstance();
+        //$model = $api->createModelInstance();
+        //dd($entity);
 
         // compare and only fill data that is empty
         //$data = $api->fillDefaultValues($data);
@@ -297,13 +309,13 @@ class API
 
         $data = ['deleted_at' => date('Y-m-d H:i:s')];
 
-        if ($model) {
+        if ($entity) {
             //$data = array_intersect_key($data, array_flip($model->getFillable()));
             //$model->fill($data);
             //
-            //$model->update();
+            $affected = $entity->$method($data);
             //$modelId = $model->{$api->identifier};
-            dd('missing');
+            //dd('missing');
         } else {
             $query = DB::table($api->getTableName())
                        ->where($api->getIdentifier(), $id);
@@ -427,9 +439,9 @@ class API
      * @param $name
      * @param $id
      *
-     * @return Endpoint
+     * @return \Illuminate\Database\Eloquent\Model
      */
-    private function findOrFail($name, $id): Endpoint
+    private function findOrFail($name, $id)
     {
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);

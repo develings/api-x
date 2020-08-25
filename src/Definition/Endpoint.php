@@ -164,10 +164,11 @@ class Endpoint
     {
         if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
+            $data['updated_at'] = "";
         }
     
         if ($this->soft_deletes && $request === self::REQUEST_POST) {
-            $data['deleted_at'] = null;
+            $data['deleted_at'] = "";
         }
 
         foreach ($this->fields as $key => $field) {

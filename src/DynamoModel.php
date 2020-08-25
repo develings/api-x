@@ -2,8 +2,12 @@
 
 namespace API;
 
-class DynamoModel extends \BaoPham\DynamoDb\DynamoDbModel
+use BaoPham\DynamoDb\DynamoDbModel;
+
+class DynamoModel extends DynamoDbModel
 {
+    public $timestamps = false;
+    
     public static function createInstance($table, array $attributes = [])
     {
         $instance = new self($attributes);
