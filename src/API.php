@@ -6,6 +6,8 @@ use API\Definition\Base;
 use API\Definition\Endpoint;
 use API\Definition\Field;
 use API\DynamoDB\Migrator;
+use BaoPham\DynamoDb\RawDynamoDbQuery;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -104,15 +106,13 @@ class API
         abort_unless($api, 404);
 
         /** @var Endpoint $api */
-        //$page = $request->get('page', 1);
         $perPage = $request->get('per_page', $api->per_page ?? 25);
 
+        /** @var DynamoBuilder|Builder $query */
         $query = $this->getBuilder($api);
-        //$query = DB::table($tableName);
 
         if ($api->order_by) {
             $query->orderByRaw($api->order_by);
-            dd($query->toDynamoDbQuery()->query);
         }
 
         if ($api->soft_deletes) {
