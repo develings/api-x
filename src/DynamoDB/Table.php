@@ -20,7 +20,7 @@ class Table
      * to the stream for this table.
      * @var string
      */
-    private $streamViewType = self::STREAM_TYPE_NEW_AND_OLD_IMAGES;
+    private $streamViewType = self::STREAM_TYPE_KEYS_ONLY;
     
     /**
      * Specify how you are charged for read and write throughput and how you manage capacity.

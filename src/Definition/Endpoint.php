@@ -57,6 +57,11 @@ class Endpoint
     public $update;
 
     private $api;
+    
+    public $sort_key;
+    
+    public $secondary_identifier;
+    public $secondary_sort_key;
 
     public function __construct(array $data)
     {

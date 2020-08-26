@@ -152,7 +152,7 @@ class API
 
         if ($api->soft_deletes) {
             if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
-                $query->orWhere(function($query) {
+                $query->orWhere(static function($query) {
                     $query->where('deleted_at', '');
                     $query->orWhereNull('deleted_at');
                 });

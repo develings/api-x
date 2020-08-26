@@ -41,7 +41,13 @@ class Migrator
             abort_unless($field, 500, 'Field is missing for API endpoint');
             
             $definition->addKey($field->key, Table::KEY_TYPE_HASH);
+            
             $definition->addAttribute($field->key, Table::TYPE_STRING);
+    
+            if ($api->sort_key) {
+                $definition->addKey($api->sort_key, Table::KEY_TYPE_RANGE);
+                $definition->addAttribute($api->sort_key, Table::TYPE_STRING);
+            }
             
             $definitions[] = $definition;
         }
@@ -65,8 +71,7 @@ class Migrator
         $migrated = $this->getTables();
         
         foreach ($definition as $table) {
-            
-            if($migrated && in_array($table, $migrated, true)) {
+            if($migrated && in_array($table->getTableName(), $migrated, true)) {
                 continue;
             }
             
@@ -79,6 +84,7 @@ class Migrator
     public function create(Table $table)
     {
         $data = $table->toArray();
+        //dd($data);
         
         return $this->client->createTable($data);
     }
