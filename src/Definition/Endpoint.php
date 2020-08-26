@@ -278,7 +278,7 @@ class Endpoint
             abort_unless($relationGiven, 404, 'Relation not found');
 
             $data = $relationGiven->getData($this, $data, $multiple);
-            $data = $multiple ? $data[0] : $data;
+            $data = !$multiple ? $data[0] : $data;
 
             //$data = array_merge($data, $relationData);
         }
