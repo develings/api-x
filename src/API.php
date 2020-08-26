@@ -135,13 +135,14 @@ class API
             }
         }
 
-        $data = $query->paginate($perPage);
+        $data = $query->paginate($perPage, $total = $query->count());
         
         $items = $api->dataHydrateItems($data->items());
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
 
         $output = $data->toArray();
         $output['data'] = $items;
+        $output['to'] = $total;
 
         return $output;
     }
@@ -159,7 +160,7 @@ class API
 
         if ($api->soft_deletes) {
             if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
-                $query->where(function($query) {
+                $query->where(static function($query) {
                     $query->where('deleted_at', '');
                     $query->orWhereNull('deleted_at');
                 });

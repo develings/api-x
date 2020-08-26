@@ -18,7 +18,7 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
         return $items->toArray();
     }
     
-    public function paginate($perPage)
+    public function paginate($perPage, $total = null)
     {
         $this->limit($perPage);
         $items = $this->toArray();
@@ -29,6 +29,10 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
         
         $paginator = new Paginator($items, $perPage);
         $paginator->setPath(env('APP_URL') . $api->base->endpoint);
+        
+        $paginator->hasMorePagesWhen($total > count($items));
+        if ($total > count($items)) {
+        }
         
         return $paginator;
     }
