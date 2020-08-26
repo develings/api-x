@@ -33,7 +33,7 @@ class Base
     public $db;
     
     public $servers;
-
+    
     public function __construct(array $data)
     {
         foreach ($data as $key => $value) {

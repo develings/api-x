@@ -85,16 +85,20 @@ class API
 	public function setRoutes()
     {
         $prefix = $this->base->endpoint ?: '';
+    
+        app()->routeMiddleware([
+            'api.auth' => \API\Auth\Authenticate::class
+        ]);
 
-        Route::get('api.json', '\API\Routes@getOpenApiJson');
-        Route::get('migrate', '\API\Routes@migrate');
-
-        Route::group(['prefix' => $prefix], function() {
-            Route::get('{api}', ['as' => 'api.index', 'uses' => '\API\Routes@index']);
-            Route::post('{api}', ['as' => 'api.post', 'uses' => '\API\Routes@post']);
-            Route::get('{api}/{id}', ['as' => 'api.get', 'uses' => '\API\Routes@get']);
-            Route::put('{api}/{id}', ['as' => 'api.put', 'uses' => '\API\Routes@put']);
-            Route::delete('{api}/{id}', ['as' => 'api.delete', 'uses' => '\API\Routes@delete']);
+        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth', 'as' => 'api'], function() {
+            Route::get('api.json',['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
+            Route::get('migrate',['as' => 'migrate', 'uses' => '\API\Routes@migrate']); //
+            
+            Route::get('{api}', ['as' => 'index', 'uses' => '\API\Routes@index']);
+            Route::post('{api}', ['as' => 'post', 'uses' => '\API\Routes@post']);
+            Route::get('{api}/{id}', ['as' => 'get', 'uses' => '\API\Routes@get']);
+            Route::put('{api}/{id}', ['as' => 'put', 'uses' => '\API\Routes@put']);
+            Route::delete('{api}/{id}', ['as' => 'delete', 'uses' => '\API\Routes@delete']);
         });
     }
 
