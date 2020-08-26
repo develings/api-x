@@ -4,6 +4,7 @@ namespace API;
 
 use API\Definition\Base;
 use API\Definition\Endpoint;
+use API\Definition\Field;
 use API\DynamoDB\Migrator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -111,10 +112,14 @@ class API
 
         if ($api->order_by) {
             $query->orderByRaw($api->order_by);
+            dd($query->toDynamoDbQuery()->query);
         }
 
-        if ($api->soft_deletes ?? false) {
-            $query->whereNull('deleted_at');
+        if ($api->soft_deletes) {
+            $query->where(static function($query) {
+                $query->where('deleted_at', '');
+                $query->orWhereNull('deleted_at');
+            });
         }
 
         $search = $request->get('search');
@@ -141,27 +146,28 @@ class API
         return $output;
     }
 
-    public function find(Endpoint $api, $id)
+    public function find(Endpoint $api, $id, $identifierKey = null)
     {
+        $identifierKey = $identifierKey ?: $api->getIdentifier();
         $model = $this->getBuilder($api);
+        
         if ($model) {
-            $query = $model->where($api->getIdentifier(), $id);
+            $query = $model->where($identifierKey, $id);
         } else {
-            $query = DB::table($api->getTableName())->where($api->getIdentifier(), $id);
+            $query = DB::table($api->getTableName())->where($identifierKey, $id);
         }
 
         if ($api->soft_deletes) {
             if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
-                $query->orWhere(static function($query) {
+                $query->where(function($query) {
                     $query->where('deleted_at', '');
                     $query->orWhereNull('deleted_at');
                 });
-                //dd($query->get());
             } else {
                 $query->whereNull('deleted_at');
             }
         }
-
+        
         return $query->get()->first();
     }
 
@@ -201,6 +207,21 @@ class API
         }
 
         $data = $validation->validated();
+        
+        // Check if a field is unique and then perform a query in the db
+        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+            /** @var Field[] $fields */
+            collect($api->fields)->filter(static function(Field $item) {
+                return $item->isUnique();
+            })->each(function($field) use($data, $api) {
+                abort_if(
+                    isset($data[$field->key]) && $this->find($api, $data[$field->key], $field->key),
+                    409,
+                    sprintf('Entity with given field (%s) value already exists.', $field->key)
+                );
+            });
+        }
+        
         //$model = $this->getBuilder($api);
         $model = $this->createModelInstance($api);
 

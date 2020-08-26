@@ -84,7 +84,6 @@ class Migrator
     public function create(Table $table)
     {
         $data = $table->toArray();
-        //dd($data);
         
         return $this->client->createTable($data);
     }
