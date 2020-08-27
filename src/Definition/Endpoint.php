@@ -24,7 +24,7 @@ class Endpoint
 
     public $soft_deletes;
 
-    public $authenticate;
+    public $authentication;
 
     public $permission;
 
