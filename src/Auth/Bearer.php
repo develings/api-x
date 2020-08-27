@@ -4,23 +4,17 @@ namespace API\Auth;
 
 use API\API;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-class Token
+class Bearer
 {
     private $db_name;
     private $key;
-    /**
-     * @var mixed|string
-     */
-    private $request_key;
     
-    public function __construct($db_name = 'users', $key = 'api_key', $requestKey = 'api_key')
+    public function __construct($db_name = 'users', $key = 'api_key')
     {
         $this->db_name = $db_name;
         $this->key = $key;
-        $this->request_key = $key;
     }
     
     public function handle(Request $request)
@@ -30,16 +24,16 @@ class Token
         $endpoint = $api->getEndpoint($this->db_name);
         abort_unless($endpoint, 500, sprintf('Endpoint (%s) not found', $this->db_name));
         
-        $token = $request->get($this->request_key);
+        $token = $this->bearerToken($request);
         if (!$token) {
             return false;
         }
         
         $user = $api->find($endpoint, $token, $this->key);
-        //abort_unless($user, 403, 'Unauthorized');
         if (!$user) {
             return false;
         }
+        //abort_unless($user, 403, 'Unauthorized');
         
         $api->setUser($user);
         
@@ -55,18 +49,4 @@ class Token
         
         return null;
     }
-    
-    public function getUser(Request $request)
-	{
-		$token = $request->get('token');
-		abort_unless($token, 403);
-
-		$user = DB::table('users')
-			->where('api_token', $token)
-			->firstOrFail();
-
-		abort_unless($user, 403);
-
-		return $user;
-	}
 }

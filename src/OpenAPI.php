@@ -47,12 +47,29 @@ class OpenAPI
             'servers' => $servers,
             'paths' => [],
             'components' => [
-                'schemas' => []
+                'schemas' => [],
+                'securitySchemes' => []
             ],
             'tags' => []
         ];
 
         abort_unless($this->base->api, 500, 'Invalid API json file');
+        
+        $data['components']['securitySchemes']['api_key'] = [
+            'type' => 'apiKey',
+            'in' => 'query',
+            'name' => 'api_key'
+        ];
+    
+        $data['components']['securitySchemes']['bearer'] = [
+            'type' => 'http',
+            'scheme' => 'bearer',
+            'bearerFormat' => 'JWT'
+        ];
+        
+        $data['security'] = [
+            ['api_key' => []]
+        ];
 
         foreach ($this->base->api as $key => $api) {
             $tags = [

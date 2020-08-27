@@ -26,8 +26,10 @@ class API
     /**
      * @var Base
      */
-    public $base;
-
+    public  $base;
+    
+    private $user;
+    
     public function __construct(string $path)
     {
         abort_unless(file_exists($path), 500, "Path given not found");
@@ -477,5 +479,10 @@ class API
         abort_unless($entity, 404);
         
         return $entity;
+    }
+    
+    public function setUser($user)
+    {
+        $this->user = $user;
     }
 }

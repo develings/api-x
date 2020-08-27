@@ -24,23 +24,35 @@ class Authenticate
                 return false;
             }
             
-            $authentication = $endpoint->authentication;
-            $auths = collect($authentication);
+            $default = $api->base->authentication ?: [];
+            if (!is_array($default)) {
+                $default = [$default];
+            }
             
-            $auths->map(function($rule) use($request){
-                $expression = explode(':', $rule);
+            $authentication = $endpoint->authentication ?: [];
+            if (!is_array($authentication)) {
+                $authentication = [$authentication];
+            }
+            
+            $auths = collect(array_merge($authentication, $default));
+    
+            foreach ($auths as $auth) {
+                $expression = explode(':', $auth);
                 $method = $expression[0] ?? null;
                 abort_unless($method, 500, 'Authentication method missing');
-                
+    
                 $className = '\API\\Auth\\' . ucfirst($method);
                 abort_unless(class_exists($className), 500, 'Authentication class does not exist');
                 $parameters = explode(',', $expression[1] ?? '');
-                
+    
                 $class = new $className(...$parameters);
-                dd($class->handle($request));
-            });
+                
+                if($class->handle($request)) {
+                    return $next($request);
+                }
+            }
             
-            dd($endpoint->authentication);
+            abort(403);
         }
         
         //dd($routeParameters, $request->route());
