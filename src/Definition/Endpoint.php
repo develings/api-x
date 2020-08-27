@@ -62,6 +62,13 @@ class Endpoint
     
     public $secondary_identifier;
     public $secondary_sort_key;
+    
+    /**
+     * @var EndpointPath
+     */
+    public $index;
+    
+    public $condition;
 
     public function __construct(array $data)
     {

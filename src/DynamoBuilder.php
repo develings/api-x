@@ -20,7 +20,7 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
     
     public function paginate($perPage, $total = null)
     {
-        $this->limit($perPage);
+        //$this->take($perPage);
         $items = $this->toArray();
         
         //$items = !$items ? $items : $items;

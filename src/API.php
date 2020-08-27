@@ -127,7 +127,16 @@ class API
                 $query->orWhereNull('deleted_at');
             });
         }
-
+        
+        if ($api->condition) {
+            //$query = $this->getWhereParameters($query, $api);
+        }
+    
+        $query->where('device_user_uuid', '0a34b211-9ca4-3092-9638-25c0290d30ef');
+    
+        //$query->toDynamoDbQuery()->op = 'Query';
+        //dd($query);
+        
         $search = $request->get('search');
         if ($search) {
             $fields = explode(',', $api->searchable ?: '');
@@ -140,7 +149,7 @@ class API
                 $i++;
             }
         }
-
+        
         $data = $query->paginate($perPage, $total = $query->count());
         
         $items = $api->dataHydrateItems($data->items());
@@ -151,6 +160,37 @@ class API
         $output['to'] = $total;
 
         return $output;
+    }
+    
+    public function getWhereParameters($query, Endpoint $api)
+    {
+        $where = $api->condition;
+        $where = is_array($where) ? $where : [$where];
+    
+        foreach ($where as $item) {
+            [$type, $condition] = explode(':', $item);
+            //$userInfo = $this->user->toArray();
+            //dd($userInfo);
+            $condition = str_replace('user.uuid', $this->user->uuid, $condition);
+            //dd($this->user->uuid, $condition);
+            $e = explode(',', $condition);
+            //dd($e);
+            
+            $query->$type(...$e);
+            //dd($e);
+        }
+        $query->decorate(function (RawDynamoDbQuery $raw) {
+            $raw->op = 'Query';
+        });
+        
+        return $query;
+        
+        //$where = str_replace(':user.uuid:', ':user')
+        
+        //return [
+        //    $where,
+        //    ['user.id' => $this->user->uuid]
+        //];
     }
 
     public function find(Endpoint $api, $id, $identifierKey = null)
