@@ -167,11 +167,6 @@ class API
     public function getWhereParameters($query, Endpoint $api)
     {
         $model = $query->getModel();
-        $model->setDynamoDbIndexKeys([
-            'device_user_uuid_index' => [
-                'hash' => 'device_uuid_id'
-            ]
-        ]);
         //$query->setModel($model);
         //$result = DynamoDb::table($this->base->getTableName($api))
         //    ->setIndexName('device_user_uuid_index')
@@ -512,6 +507,7 @@ class API
         
         if ($this->base->db->driver === 'dynamoDB') {
             $model = DynamoModel::createInstance($tableName);
+            $endpoint->setDynamoIndexes($model);
             $model = new DynamoBuilder($model);
         } else {
             $model = DB::table($tableName);

@@ -3,6 +3,7 @@
 namespace API\Definition;
 
 use API\API;
+use API\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -69,6 +70,8 @@ class Endpoint
     public $index;
     
     public $condition;
+    
+    public $indexes;
 
     public function __construct(array $data)
     {
@@ -309,5 +312,26 @@ class Endpoint
     public function getField(string $name)
     {
         return $this->fields[$name];
+    }
+    
+    public function setDynamoIndexes(DynamoModel $model)
+    {
+        if (!$this->indexes) {
+            return false;
+        }
+        
+        $indexes = [];
+        foreach ($this->indexes as $index => $values) {
+            $data = explode(',', $values);
+            $indexes[$index] = [
+                'hash' => $data[0]
+            ];
+            
+            if (isset($data[1])) {
+                $indexes[$index]['range'] = $data[1];
+            }
+        }
+        
+        $model->setDynamoDbIndexKeys($indexes);
     }
 }
