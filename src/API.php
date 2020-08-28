@@ -6,6 +6,8 @@ use API\Definition\Base;
 use API\Definition\Endpoint;
 use API\Definition\Field;
 use API\DynamoDB\Migrator;
+use BaoPham\DynamoDb\DynamoDbQueryBuilder;
+use BaoPham\DynamoDb\Facades\DynamoDb;
 use BaoPham\DynamoDb\RawDynamoDbQuery;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -129,10 +131,10 @@ class API
         }
         
         if ($api->condition) {
-            //$query = $this->getWhereParameters($query, $api);
+            $query = $this->getWhereParameters($query, $api);
         }
     
-        $query->where('device_user_uuid', '0a34b211-9ca4-3092-9638-25c0290d30ef');
+        //$query->where('device_user_uuid', '0a34b211-9ca4-3092-9638-25c0290d30ef');
     
         //$query->toDynamoDbQuery()->op = 'Query';
         //dd($query);
@@ -164,6 +166,40 @@ class API
     
     public function getWhereParameters($query, Endpoint $api)
     {
+        $model = $query->getModel();
+        $model->setDynamoDbIndexKeys([
+            'device_user_uuid_index' => [
+                'hash' => 'device_uuid_id'
+            ]
+        ]);
+        //$query->setModel($model);
+        //$result = DynamoDb::table($this->base->getTableName($api))
+        //    ->setIndexName('device_user_uuid_index')
+        //    // call set<key_name> to build the query body to be sent to AWS
+        //                  ->setKeyConditionExpression('#name = :name')
+        //                    //->setProjectionExpression('device_user_uuid, created_at')
+        //                  ->setExpressionAttributeNames(['#name' => 'device_user_uuid'])
+        //                  ->setExpressionAttributeValues([':name' => DynamoDb::marshalValue('019e98c9-384f-396c-8633-4c473c84a743')])
+        //                  ->prepare()
+        //    // the query body will be sent upon calling this.
+        //                  ->query(); // supports any DynamoDbClient methods (e.g. batchWriteItem, batchGetItem, etc.)
+        //
+        //dd($result);
+        //
+        ////dd($this->base->getTableName($api));
+        //$result = DynamoDb::table($this->base->getTableName($api))
+        //                  ->setIndex('device_user_uuid_index')
+        //        ->setKeyConditionExpression('#name = :name')
+        //        ->setProjectionExpression('id, author_name')
+        //    //// Can set the attribute mapping one by one instead
+        //    //    ->setExpressionAttributeName('#name', 'author_name')
+        //    //    ->setExpressionAttributeValue(':name', DynamoDb::marshalValue('Bao'))
+        //                  ->prepare()
+        //                  ->query();
+        //
+        //dd($this->base->getTableName($api), $result);
+        
+        
         $where = $api->condition;
         $where = is_array($where) ? $where : [$where];
     
@@ -179,9 +215,21 @@ class API
             $query->$type(...$e);
             //dd($e);
         }
-        $query->decorate(function (RawDynamoDbQuery $raw) {
-            $raw->op = 'Query';
-        });
+        //$query->decorate(function (RawDynamoDbQuery $raw) {
+        //    $raw->op = 'Query';
+        //    //$raw->query['KeyConditionExpression'] = $raw->query['FilterExpression'];
+        //    //unset($raw->query['FilterExpression']);
+        //});
+        /** @var DynamoDbQueryBuilder $query */
+        //$query->withIndex('device_user_uuid_index');
+        
+        
+        //dd($query->get());
+        dd($query, $model, $query->toDynamoDbQuery(), $query->get());
+        
+        //
+    
+        
         
         return $query;
         
