@@ -130,9 +130,9 @@ class API
             });
         }
         
-        if ($api->condition) {
+        //if ($api->condition) {
             $query = $this->getWhereParameters($query, $api);
-        }
+        //}
     
         //$query->where('device_user_uuid', '0a34b211-9ca4-3092-9638-25c0290d30ef');
     
@@ -166,6 +166,10 @@ class API
     
     public function getWhereParameters($query, Endpoint $api)
     {
+        if (!$api->condition) {
+            return null;
+        }
+        
         $model = $query->getModel();
         //$query->setModel($model);
         //$result = DynamoDb::table($this->base->getTableName($api))
@@ -257,6 +261,8 @@ class API
                 $query->whereNull('deleted_at');
             }
         }
+        
+        dd($query->toDynamoDbQuery());
         
         return $query->get()->first();
     }

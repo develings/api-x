@@ -25,6 +25,7 @@ class Token
     
     public function handle(Request $request)
     {
+        return true;
         /** @var API $api */
         $api = app()->get(API::class);
         $endpoint = $api->getEndpoint($this->db_name);
