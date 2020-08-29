@@ -316,6 +316,7 @@ class Endpoint
     
     public function setDynamoIndexes(DynamoModel $model)
     {
+        $model->setKeyName($this->getIdentifier());
         if (!$this->indexes) {
             return false;
         }

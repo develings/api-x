@@ -109,11 +109,10 @@ class API
 
     public function index($name, Request $request)
     {
-        /** @var API $api */
+        /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
 
-        /** @var Endpoint $api */
         $perPage = $request->get('per_page', $api->per_page ?? 25);
 
         /** @var DynamoBuilder|Builder $query */
@@ -152,7 +151,7 @@ class API
             }
         }
         
-        $data = $query->paginate($perPage, $total = $query->count());
+        $data = $query->paginate($perPage, $total = $query->count(), $api);
         
         $items = $api->dataHydrateItems($data->items());
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
@@ -166,8 +165,9 @@ class API
     
     public function getWhereParameters($query, Endpoint $api)
     {
+        //dd($query, $query->toDynamoDbQuery(), $query->get());
         if (!$api->condition) {
-            return null;
+            return $query;
         }
         
         $model = $query->getModel();
@@ -205,14 +205,10 @@ class API
         foreach ($where as $item) {
             [$type, $condition] = explode(':', $item);
             //$userInfo = $this->user->toArray();
-            //dd($userInfo);
             $condition = str_replace('user.uuid', $this->user->uuid, $condition);
-            //dd($this->user->uuid, $condition);
             $e = explode(',', $condition);
-            //dd($e);
             
             $query->$type(...$e);
-            //dd($e);
         }
         //$query->decorate(function (RawDynamoDbQuery $raw) {
         //    $raw->op = 'Query';
@@ -224,7 +220,7 @@ class API
         
         
         //dd($query->get());
-        dd($query, $model, $query->toDynamoDbQuery(), $query->get());
+        //dd($query, $model, $query->toDynamoDbQuery(), $query->get());
         
         //
     
@@ -262,7 +258,7 @@ class API
             }
         }
         
-        dd($query->toDynamoDbQuery());
+        //dd($query->toDynamoDbQuery());
         
         return $query->get()->first();
     }
@@ -528,6 +524,7 @@ class API
     
         if ($this->base->db->driver === 'dynamoDB') {
             $model = DynamoModel::createInstance($tableName);
+            $model->setKeyName($endpoint->getIdentifier());
             //$model = new DynamoBuilder($model);
         } else {
             $model = DB::table($tableName);
