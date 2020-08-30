@@ -94,7 +94,7 @@ class API
             'api.auth' => \API\Auth\Authenticate::class
         ]);
 
-        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth', 'as' => 'api'], function() {
+        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth', 'as' => 'api'], static function() {
             Route::get('api.json',['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
             Route::get('migrate',['as' => 'migrate', 'uses' => '\API\Routes@migrate']); //
             
@@ -124,10 +124,10 @@ class API
         }
 
         if ($api->soft_deletes) {
-            //$query->where(static function($query) {
-            //    $query->where('deleted_at', '');
-            //    $query->orWhereNull('deleted_at');
-            //});
+            $query->where(static function($query) {
+                $query->where('deleted_at', '');
+                $query->orWhereNull('deleted_at');
+            });
         }
         
         $query = $this->getWhereParameters($query, $api);
@@ -463,7 +463,12 @@ class API
     {
         return $this->base->api;
     }
-
+    
+    public function getUser()
+    {
+        return $this->user;
+    }
+    
     private function dataHydrate(Endpoint $api, $data)
     {
         $hasSoftDeletes = $api->soft_deletes ?? false;
