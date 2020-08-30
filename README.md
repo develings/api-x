@@ -2,6 +2,10 @@
 
 Create a full-fledged API only using a simple JSON file.
 
+
+### TODO
+- [ ] Pagination
+
 #### Simple example
 ```json
 {
