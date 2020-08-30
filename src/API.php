@@ -114,6 +114,7 @@ class API
         abort_unless($api, 404);
 
         $perPage = $request->get('per_page', $api->per_page ?? 25);
+        $offset = $request->get('offset');
 
         /** @var DynamoBuilder|Builder $query */
         $query = $this->getBuilder($api);
@@ -123,20 +124,13 @@ class API
         }
 
         if ($api->soft_deletes) {
-            $query->where(static function($query) {
-                $query->where('deleted_at', '');
-                $query->orWhereNull('deleted_at');
-            });
+            //$query->where(static function($query) {
+            //    $query->where('deleted_at', '');
+            //    $query->orWhereNull('deleted_at');
+            //});
         }
         
-        //if ($api->condition) {
-            $query = $this->getWhereParameters($query, $api);
-        //}
-    
-        //$query->where('device_user_uuid', '0a34b211-9ca4-3092-9638-25c0290d30ef');
-    
-        //$query->toDynamoDbQuery()->op = 'Query';
-        //dd($query);
+        $query = $this->getWhereParameters($query, $api);
         
         $search = $request->get('search');
         if ($search) {
@@ -149,6 +143,11 @@ class API
                 $query->$method($field, 'like',  '%' . $search . '%');
                 $i++;
             }
+        }
+    
+        if ($offset) {
+            $query->afterKey(['uuid' => $offset, 'created_at' => '2020-08-17 13:50:19']);
+            //dd($query->toDynamoDbQuery(), $query->get());
         }
         
         $data = $query->paginate($perPage, $total = $query->count(), $api);

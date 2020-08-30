@@ -40,8 +40,9 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
         $lastKey = null;
         if ($itemsArray && ($last = $items->last())) {
             $lastKey = $last->setKeyName($endpoint->getIdentifier());
+            
             $paginator->appends([
-                'last_key' => $lastKey->getKey()
+                'offset' => $lastKey->getKey()
             ]);
         }
         
