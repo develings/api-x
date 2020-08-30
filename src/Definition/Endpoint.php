@@ -3,9 +3,11 @@
 namespace API\Definition;
 
 use API\API;
+use API\DynamoBuilder;
 use API\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Concerns\ValidatesAttributes;
@@ -334,5 +336,21 @@ class Endpoint
         }
         
         $model->setDynamoDbIndexKeys($indexes);
+    }
+    
+    public function getBuilder()
+    {
+        $api = app()->get(API::class);
+        $tableName = $api->base->getTableName($this);
+        
+        if ($api->base->db->driver === 'dynamoDB') {
+            $model = DynamoModel::createInstance($tableName);
+            $this->setDynamoIndexes($model);
+            $model = new DynamoBuilder($model);
+        } else {
+            $model = DB::table($tableName);
+        }
+        
+        return $model;
     }
 }

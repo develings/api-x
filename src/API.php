@@ -453,7 +453,7 @@ class API
      */
     public function getEndpoint(string $name)
     {
-        return $this->getApis()[$name] ?? null;
+        return $this->getApis()[str_replace('-', '_', $name)] ?? null;
     }
 
     /**
