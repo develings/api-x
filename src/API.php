@@ -246,20 +246,19 @@ class API
             $query = DB::table($api->getTableName())->where($identifierKey, $id);
         }
 
-        if ($api->soft_deletes) {
-            if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
-                $query->where(static function($query) {
-                    $query->where('deleted_at', '');
-                    $query->orWhereNull('deleted_at');
-                });
-            } else {
-                $query->whereNull('deleted_at');
-            }
+        if ( $api->soft_deletes && $this->base->db->driver === Definition\DB::DRIVER_MYSQL ) {
+            $query->whereNull('deleted_at');
         }
         
-        //dd($query->toDynamoDbQuery());
+        //dd($query->toDynamoDbQuery(), $api);
         
-        return $query->get()->first();
+        $first = $query->get()->first();
+    
+        if ( $first && $this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
+            return null;
+        }
+        
+        return $first;
     }
 
     public function get($name, $id, Request $request)

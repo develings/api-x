@@ -25,6 +25,7 @@ class Token
     
     public function handle(Request $request)
     {
+        //return true;
         //dd('her');
         /** @var API $api */
         $api = app()->get(API::class);
@@ -37,6 +38,7 @@ class Token
         }
         
         $user = $api->find($endpoint, $token, $this->key);
+        //dd($user);
         //abort_unless($user, 403, 'Unauthorized');
         if (!$user) {
             return false;
