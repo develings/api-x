@@ -2,6 +2,7 @@
 
 namespace API\Command;
 
+use API\DynamoDB\Migrator;
 use Aws\AwsClient;
 use Illuminate\Support\Facades\App;
 use Illuminate\Console\Command;
@@ -33,5 +34,9 @@ class DynamoDBMigrateCommand extends Command
         if (!$tables) {
             // get All tables from
         }
+        
+        $migrator = new Migrator();
+        
+        $migrator->migrate();
     }
 }
