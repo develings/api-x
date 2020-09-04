@@ -254,7 +254,13 @@ class API
     public function find(Endpoint $api, $id, $identifierKey = null)
     {
         $identifierKey = $identifierKey ?: $api->getIdentifier();
-        $model = $this->getBuilder($api);
+        if ($this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL) {
+            $model = DynamicModel::createInstance($this->base->getTableName($api));
+            $model->fillable(array_keys($api->fields));
+            //dd($model);
+        } else {
+            $model = $this->getBuilder($api);
+        }
         
         if ($model) {
             $query = $model->where($identifierKey, $id);
@@ -272,9 +278,7 @@ class API
         }
         
         //dd($query->toDynamoDbQuery(), $api);
-        
-        
-    
+
         if ( $first && $this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
             return null;
         }
@@ -307,15 +311,16 @@ class API
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
-
-        $validation = Validator::make($request->all(), $rules);
+    
+        $requestData = $request->all();
+        $validation = Validator::make($requestData, $rules);
         if ($validation->fails()) {
             $response = [
                 'errors' => $validation->errors()
             ];
 
             // distinguish between unique errors and normal errors and change to 409 if necessary
-            return response($response, 400);
+            return response($response, 409);
         }
 
         $data = $validation->validated();
@@ -393,7 +398,13 @@ class API
 
         $model = $this->createModelInstance($api);
         
-        $data = array_merge($entity->toArray(), $data);
+        
+        if (method_exists($entity, 'toArray')) {
+            $entityData = $entity->toArray();
+        } else {
+            $entityData = (array) $entity;
+        }
+        //$data = array_merge($entityData, $data);
         // compare and only fill data that is empty
         $data = $api->fillDefaultValues($data, Endpoint::REQUEST_PUT);
         
@@ -410,6 +421,8 @@ class API
             if ($model->getFillable()) {
                 $data = array_intersect_key($data, array_flip($model->getFillable()));
             }
+            //dd($entity, $data);
+            $entity->fillable(array_keys($api->fields));
             $entity->update($data);
         } else {
             DB::table($api->getTableName())
@@ -552,7 +565,7 @@ class API
             $model->setKeyName($endpoint->getIdentifier());
             //$model = new DynamoBuilder($model);
         } else {
-            $model = new DynamicModel($tableName);
+            $model = DynamicModel::createInstance($tableName);
             $model->fillable(array_keys($endpoint->fields));
         }
     

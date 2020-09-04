@@ -4,11 +4,19 @@ namespace API;
 
 class DynamicModel extends \Illuminate\Database\Eloquent\Model
 {
-    public function __construct(string $table, array $attributes = [])
+    //public function __construct(string $table, array $attributes = [])
+    //{
+    //    $this->table = $table;
+    //
+    //    parent::__construct($attributes);
+    //}
+    
+    public static function createInstance($table, array $attributes = [])
     {
-        $this->table = $table;
-
-        parent::__construct($attributes);
+        $instance = new self($attributes);
+        $instance->setTable($table);
+        
+        return $instance;
     }
 
     /**
