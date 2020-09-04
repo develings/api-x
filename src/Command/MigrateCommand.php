@@ -36,14 +36,23 @@ class MigrateCommand extends Command
         
         $api = API::getInstance();
         
-        if (!$tables) {
-            // get All tables from
-        }
-    
         if ($api->base->db->driver === DB::DRIVER_MYSQL) {
             $migrator = new MySQLMigrator($api);
         }
         
-        dd($tables, $migrator->migrate());
+        $migrator->setInput($this->input);
+        $migrator->setOutput($this->output);
+        
+        $this->line('');
+        $this->line('<info>Starting</info> migration...');
+        $this->line('');
+        
+        $tables = $tables ? explode(',', $tables) : [];
+    
+        $migrator->migrate($tables);
+    
+        $this->line('');
+        $this->info('All done');
+        $this->line('');
     }
 }

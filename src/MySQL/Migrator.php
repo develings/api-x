@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 
 class Migrator
 {
+    use \Illuminate\Console\Concerns\InteractsWithIO;
     public $api;
     
     public function __construct(API $api)
@@ -16,7 +17,7 @@ class Migrator
         $this->api = $api;
     }
     
-    public function migrate()
+    public function migrate(array $tables, $force = false)
     {
         // Schema::dropIfExists('users');
         
@@ -33,74 +34,47 @@ class Migrator
         $data = $this->api->base;
         
         foreach ($data->api as $table) {
+            
+            if ($tables && !in_array($table->name, $tables)) {
+                // Skip table because it is not selected to be migrated
+                $this->line(sprintf('<info>Skipping</info> %s', $table->name));
+                continue;
+            }
+            
             $tableName = $this->api->base->getTableName($table);
             
-            Schema::disableForeignKeyConstraints();
-            Schema::dropIfExists($tableName);
-            Schema::enableForeignKeyConstraints();
+            if ($force) {
+                Schema::disableForeignKeyConstraints();
+                Schema::dropIfExists($tableName);
+                Schema::enableForeignKeyConstraints();
+            }
             
             //continue;
             $exists = Schema::hasTable($tableName);
-            $fields = $table->fields;
-            
-            // check if definition has changed... how?
-            //dump($fields);
-            if (!$exists) {
-                //dump($tableName);
-                //continue;
-                Schema::create($tableName, function(Blueprint $t) use($table, $fields) {
-                    // types:
-                    foreach ($fields as $key => $field) {
-                        $parameters = $this->parseColumnDefinition($field, $t, $key);
-                        //dump($field, $fields);
-                    }
-                    
-                    if ($table->timestamps ?? false) {
-                        $t->timestamps();
-                    }
-                    
-                    if ($table->soft_deletes ?? false) {
-                        $t->softDeletes();
-                    }
-                    
-                    $relations = $table->relations ?? [];
-                    $relations = [];
-                    foreach ($relations as $relationName => $relation) {
-                        $parts = explode('|', $relation->definition);
-                        $column = null;
-                        foreach ($parts as $part) {
-                            $parameters = explode(':', $part);
-                            $method = array_shift($parameters);
-                            
-                            $validRelationTypes = ['belongsTo'];
-                            if (!in_array($method, $validRelationTypes, true) ) {
-                                continue;
-                            }
-                            
-                            $column = $column ?: $t;
-                            //if( !method_exists($column, $method) ) {
-                            //    dump('method does not exist: ' . $method);
-                            //    continue;
-                            //}
-                            
-                            if( $parameters ) {
-                                $parameters = explode(',', $parameters[0]);
-                            }
-                            
-                            if ($method === 'belongsTo') {
-                                $fieldName = $parameters[1] ?? $relationName . '_id';
-                                $relationTableName = $this->getTableName($parameters[0]);
-                                $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
-                            }
-                        }
-                    }
-                });
+            if ($exists) {
+                $this->error(sprintf('Table (%s) already exists.', $tableName));
+                continue;
             }
             
-            //dd($table);
+            $this->line(sprintf('Migrating <info>%s</info>...', $tableName));
+            
+            //continue;
+            
+            // For testing purposes only
+            //$blueprint = new Blueprint($tableName);
+            //$blueprint->create();
+            //$blueprint = $this->create($table, $blueprint);
+    
+    
+            Schema::create($tableName, function(Blueprint $blueprint) use($table) {
+                $this->create($table, $blueprint);
+            });
+            //
+            $this->line(sprintf('Migrated <info>%s</info>.', $tableName));
+            //dd($blueprint);
         }
         
-        dd('he', $data['api'], \App\User::count());
+        return true;
     }
     
     public function getTableName(string $tableName)
@@ -115,7 +89,7 @@ class Migrator
      * @param Blueprint $t
      * @param $key
      *
-     * @return false|string[]
+     * @return Blueprint
      */
     public function parseColumnDefinition(Field $field, Blueprint $t, $key)
     {
@@ -127,18 +101,99 @@ class Migrator
             
             //dump($key . '-'. $field, $parameters);
             $column = $column ?: $t;
-            if( !method_exists($column, $method) ) {
-                dump('method does not exist: ' . $method);
-                continue;
-            }
-            
             if( $parameters ) {
                 $parameters = explode(',', $parameters[0]);
             }
+            
+            if( !method_exists($column, $method)  ) {
+                // method does not exist in laravel
+                
+                if (!$this->methods($column, $key, $method, $parameters)) {
+                    // custom method does not exist in php api
+                    $this->error('Method does not exist: ' . $method);
+                }
+                
+                continue;
+            }
+            
             
             $column->$method($key, ...$parameters);
         }
         
         return $parameters;
+    }
+    
+    public function methods($column, $key, $method, $parameters = null)
+    {
+        if ($method === 'password') {
+            $column->string($key, ...$parameters);
+            return true;
+        } else if ($method === 'email') {
+            $column->string($key, ...$parameters);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * @param \API\Definition\Endpoint $table
+     * @param Blueprint $blueprint
+     *
+     * @return false|string[]
+     */
+    private function create(\API\Definition\Endpoint $table, Blueprint $blueprint)
+    {
+        $fields = $table->fields;
+        foreach ($fields as $key => $field) {
+            $parameters = $this->parseColumnDefinition($field, $blueprint, $key);
+        }
+        
+        if( $table->timestamps ?? false ) {
+            $blueprint->timestamps();
+        }
+        
+        if( $table->soft_deletes ?? false ) {
+            $blueprint->softDeletes();
+        }
+        
+        $relations = $table->relations ?? [];
+        //$relations = [];
+        foreach ($relations as $relationName => $relation) {
+            $parts = explode('|', $relation->definition);
+            $column = null;
+            foreach ($parts as $part) {
+                $parameters = explode(':', $part);
+                $method = array_shift($parameters);
+                
+                $validRelationTypes = ['belongsTo'];
+                if( !in_array($method, $validRelationTypes, true) ) {
+                    continue;
+                }
+                
+                $column = $column ?: $blueprint;
+                //if( !method_exists($column, $method) ) {
+                //    dump('method does not exist: ' . $method);
+                //    continue;
+                //}
+                
+                if( $parameters ) {
+                    $parameters = explode(',', $parameters[0]);
+                }
+                
+                if( $method === 'belongsTo' ) {
+                    $fieldName = $parameters[1] ?? $relationName . '_id';
+                    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
+                    if( !$relationEndpoint ) {
+                        $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
+                        continue;
+                    }
+                    $relationTableName = $this->api->base->getTableName($relationEndpoint);
+                    $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
+                }
+            }
+        }
+        
+        return $blueprint;
     }
 }
