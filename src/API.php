@@ -48,6 +48,14 @@ class API
 
         app()->instance(self::class, $this);
     }
+    
+    /**
+     * @return self
+     */
+    public static function getInstance(): self
+    {
+        return app()->get(self::class);
+    }
 
     public function do()
 	{

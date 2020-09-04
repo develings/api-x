@@ -3,6 +3,9 @@
 Create a full-fledged API only using a simple JSON file.
 
 
+Give me all of the _____ for a particular _____.
+EG: Give me all of the OrderIds for a particular Username;
+
 ### TODO
 - [ ] Pagination
 

@@ -1,21 +1,22 @@
 <?php
 
-namespace API;
+namespace API\MySQL;
 
-use Illuminate\Database\Migrations\Migration;
+use API\API;
+use API\Definition\Field;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class Database
+class Migrator
 {
-    public $definition;
+    public $api;
     
-    public function __construct($definition)
+    public function __construct(API $api)
     {
-        $this->definition = $definition;
+        $this->api = $api;
     }
     
-    public function do()
+    public function migrate()
     {
         // Schema::dropIfExists('users');
         
@@ -29,11 +30,10 @@ class Database
         //           $table->timestamps();
         //       });
         
-        $data = $this->definition;
+        $data = $this->api->base;
         
-        dd($data['api']);
-        foreach ($data['api'] as $table) {
-            $tableName = $this->getTableName($table['db'] ?? $table['name']);
+        foreach ($data->api as $table) {
+            $tableName = $this->api->base->getTableName($table);
             
             Schema::disableForeignKeyConstraints();
             Schema::dropIfExists($tableName);
@@ -41,7 +41,7 @@ class Database
             
             //continue;
             $exists = Schema::hasTable($tableName);
-            $fields = $table['fields'] ?? [];
+            $fields = $table->fields;
             
             // check if definition has changed... how?
             //dump($fields);
@@ -55,17 +55,18 @@ class Database
                         //dump($field, $fields);
                     }
                     
-                    if ($table['timestamps'] ?? false) {
+                    if ($table->timestamps ?? false) {
                         $t->timestamps();
                     }
                     
-                    if ($table['soft_deletes'] ?? false) {
+                    if ($table->soft_deletes ?? false) {
                         $t->softDeletes();
                     }
                     
-                    $relations = $table['relation'] ?? [];
+                    $relations = $table->relations ?? [];
+                    $relations = [];
                     foreach ($relations as $relationName => $relation) {
-                        $parts = explode('|', $relation);
+                        $parts = explode('|', $relation->definition);
                         $column = null;
                         foreach ($parts as $part) {
                             $parameters = explode(':', $part);
@@ -95,6 +96,8 @@ class Database
                     }
                 });
             }
+            
+            //dd($table);
         }
         
         dd('he', $data['api'], \App\User::count());
@@ -114,9 +117,9 @@ class Database
      *
      * @return false|string[]
      */
-    public function parseColumnDefinition($field, Blueprint $t, $key)
+    public function parseColumnDefinition(Field $field, Blueprint $t, $key)
     {
-        $parts = explode('|', $field);
+        $parts = explode('|', $field->definition);
         $column = null;
         foreach ($parts as $part) {
             $parameters = explode(':', $part);
