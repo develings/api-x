@@ -2,6 +2,7 @@
 
 namespace API\DynamoDB;
 
+use API\API;
 use API\Definition\Base;
 use Aws\AwsClient;
 use Aws\DynamoDb\DynamoDbClient;
@@ -62,9 +63,13 @@ class Migrator
         return $tablesExist->get('TableNames');
     }
     
-    public function migrate(Base $base)
+    public function migrate()
     {
-        $definition = $this->getDefinition($base);
+        /** @var API $api */
+        $api = \app()->get(API::class);
+        $definition = $this->getDefinition($api->base);
+        
+        dd($definition);
         
         $tables = [];
         
