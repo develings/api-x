@@ -4,6 +4,7 @@ namespace API\Auth;
 
 use API\API;
 use API\Definition\Endpoint;
+use API\Definition\EndpointPath;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -32,7 +33,22 @@ class Authenticate
         }
         
         $auths = collect(array_merge($authentication ?? [], $default));
+        
+        $method = strtolower($request->method());
+        $methods = [
+            'post' => 'create',
+            'put' => 'update',
+            'delete' => 'delete',
+            'patch' => 'update',
+            'get' => 'index',
+        ];
+        
+        /** @var EndpointPath $path */
+        if($endpoint && ($path = $endpoint->{$methods[$method]} ?? null) && $path->authentication) {
+            $auths->prepend($path->authentication);
+        }
 
+        //dd($auths, $s, $request->method());
         foreach ($auths as $auth) {
             $expression = explode(':', $auth);
             $method = $expression[0] ?? null;

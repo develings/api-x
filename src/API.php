@@ -158,14 +158,22 @@ class API
             //dd($query->toDynamoDbQuery(), $query->get());
         }
         
-        $data = $query->paginate($perPage, $total = $query->count(), $api);
+        
+        if ($this->base->db === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+            $data = $query->paginate($perPage, $total = $query->count(), $api);
+        } else {
+            $data = $query->paginate($perPage);
+        }
         
         $items = $api->dataHydrateItems($data->items());
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
 
         $output = $data->toArray();
         $output['data'] = $items;
-        $output['to'] = $total;
+        
+        if (isset($total)) {
+            $output['to'] = $total;
+        }
 
         return $output;
     }
@@ -254,13 +262,18 @@ class API
             $query = DB::table($api->getTableName())->where($identifierKey, $id);
         }
 
-        if ( $api->soft_deletes && $this->base->db->driver === Definition\DB::DRIVER_MYSQL ) {
-            $query->whereNull('deleted_at');
+        if ( $this->base->db->driver === Definition\DB::DRIVER_MYSQL ) {
+            if ($api->soft_deletes) {
+                $query->whereNull('deleted_at');
+            }
+            $first = $query->first();
+        } else {
+            $first = $query->get()->first();
         }
         
         //dd($query->toDynamoDbQuery(), $api);
         
-        $first = $query->get()->first();
+        
     
         if ( $first && $this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
             return null;
@@ -290,6 +303,7 @@ class API
         // Validate the data from within api fields
         $rules = $api->getValidationRules(Endpoint::REQUEST_POST);
 
+        //dd($api, $rules);
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
@@ -533,12 +547,13 @@ class API
     {
         $tableName = $this->base->getTableName($endpoint);
     
-        if ($this->base->db->driver === 'dynamoDB') {
+        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
             $model = DynamoModel::createInstance($tableName);
             $model->setKeyName($endpoint->getIdentifier());
             //$model = new DynamoBuilder($model);
         } else {
-            $model = DB::table($tableName);
+            $model = new DynamicModel($tableName);
+            $model->fillable(array_keys($endpoint->fields));
         }
     
         return $model;

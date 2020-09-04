@@ -7,7 +7,6 @@ use API\DynamoBuilder;
 use API\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Concerns\ValidatesAttributes;
@@ -74,15 +73,20 @@ class Endpoint
     public $condition;
     
     public $indexes;
-
+    
     public function __construct(array $data)
     {
+        $paths = ['index', 'create', 'update', 'delete', 'get'];
         foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {
                 if ($key === 'fields') {
                     foreach ($value as $field => $v) {
                         $value[$field] = new Field($field, $v);
                     }
+                }
+                
+                if (in_array($key, $paths, true)) {
+                    $value = new EndpointPath($value);
                 }
 
                 if ($key === 'relations') {
@@ -107,8 +111,7 @@ class Endpoint
             $validators[] = Str::replaceFirst('validate_', '', Str::snake($validationMethod));
         }
         
-        /** @var API $base */
-        $api = app()->get(API::class);
+        $api = API::getInstance();
         
         if ($api->base->db->driver === DB::DRIVER_DYNAMO_DB) {
             $validators = array_values(array_diff($validators, ([
@@ -130,7 +133,7 @@ class Endpoint
 
                 $path = $rule->name;
                 if ($name === 'unique' && !$rule->parameters) {
-                    $path .= ':' . $this->db;
+                    $path .= ':' . $api->base->getTableName($this);
                 }
                 
                 if ($name === 'create_ignore' && $request === self::REQUEST_POST) {
@@ -348,7 +351,7 @@ class Endpoint
             $this->setDynamoIndexes($model);
             $model = new DynamoBuilder($model);
         } else {
-            $model = DB::table($tableName);
+            $model = \Illuminate\Support\Facades\DB::table($tableName);
         }
         
         return $model;

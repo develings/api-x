@@ -35,7 +35,7 @@ class Migrator
         
         foreach ($data->api as $table) {
             
-            if ($tables && !in_array($table->name, $tables)) {
+            if ($tables && !in_array($table->name, $tables, true) ) {
                 // Skip table because it is not selected to be migrated
                 $this->line(sprintf('<info>Skipping</info> %s', $table->name));
                 continue;
@@ -52,7 +52,7 @@ class Migrator
             //continue;
             $exists = Schema::hasTable($tableName);
             if ($exists) {
-                $this->error(sprintf('Table (%s) already exists.', $tableName));
+                $this->line(sprintf('<error> FAIL </error> Table (<info>%s</info>) already exists.', $table->name));
                 continue;
             }
             
@@ -64,6 +64,7 @@ class Migrator
             //$blueprint = new Blueprint($tableName);
             //$blueprint->create();
             //$blueprint = $this->create($table, $blueprint);
+            //dd($blueprint);
     
     
             Schema::create($tableName, function(Blueprint $blueprint) use($table) {
@@ -86,23 +87,37 @@ class Migrator
     
     /**
      * @param $field
-     * @param Blueprint $t
+     * @param Blueprint $blueprint
      * @param $key
      *
      * @return Blueprint
      */
-    public function parseColumnDefinition(Field $field, Blueprint $t, $key)
+    public function parseColumnDefinition(Field $field, Blueprint $blueprint, $key)
     {
         $parts = explode('|', $field->definition);
         $column = null;
+        $modifiers = [
+            'after', 'autoIncrement', 'charset', 'collation', 'comment',
+            'first', 'nullable', 'storedAs', 'unsigned', 'useCurrent', 'virtualAs',
+            'generatedAs', 'always', 'spatialIndex', 'index', 'persisted', 'primary',
+            'type',
+            //'unique', 'default'
+        ];
+        
         foreach ($parts as $part) {
             $parameters = explode(':', $part);
             $method = array_shift($parameters);
             
             //dump($key . '-'. $field, $parameters);
-            $column = $column ?: $t;
+            $column = $column ?: $blueprint;
             if( $parameters ) {
                 $parameters = explode(',', $parameters[0]);
+            }
+            
+            // handle special modifiers such as unsigned, index
+            if (in_array($method, $modifiers, true)) {
+                $column->$method(...$parameters);
+                continue;
             }
             
             if( !method_exists($column, $method)  ) {
@@ -116,11 +131,10 @@ class Migrator
                 continue;
             }
             
-            
-            $column->$method($key, ...$parameters);
+            $column = $column->$method($key, ...$parameters);
         }
         
-        return $parameters;
+        return $blueprint;
     }
     
     public function methods($column, $key, $method, $parameters = null)
@@ -128,11 +142,13 @@ class Migrator
         if ($method === 'password') {
             $column->string($key, ...$parameters);
             return true;
-        } else if ($method === 'email') {
+        }
+    
+        if ($method === 'email') {
             $column->string($key, ...$parameters);
             return true;
         }
-        
+    
         return false;
     }
     
@@ -140,21 +156,13 @@ class Migrator
      * @param \API\Definition\Endpoint $table
      * @param Blueprint $blueprint
      *
-     * @return false|string[]
+     * @return Blueprint
      */
     private function create(\API\Definition\Endpoint $table, Blueprint $blueprint)
     {
         $fields = $table->fields;
         foreach ($fields as $key => $field) {
-            $parameters = $this->parseColumnDefinition($field, $blueprint, $key);
-        }
-        
-        if( $table->timestamps ?? false ) {
-            $blueprint->timestamps();
-        }
-        
-        if( $table->soft_deletes ?? false ) {
-            $blueprint->softDeletes();
+            $this->parseColumnDefinition($field, $blueprint, $key);
         }
         
         $relations = $table->relations ?? [];
@@ -166,7 +174,7 @@ class Migrator
                 $parameters = explode(':', $part);
                 $method = array_shift($parameters);
                 
-                $validRelationTypes = ['belongsTo'];
+                $validRelationTypes = ['belongsTo', 'hasOne'];
                 if( !in_array($method, $validRelationTypes, true) ) {
                     continue;
                 }
@@ -191,7 +199,26 @@ class Migrator
                     $relationTableName = $this->api->base->getTableName($relationEndpoint);
                     $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
                 }
+    
+                if( $method === 'hasOne' ) {
+                    $fieldName = $parameters[1] ?? $relationName . '_id';
+                    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
+                    if( !$relationEndpoint ) {
+                        $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
+                        continue;
+                    }
+                    $relationTableName = $this->api->base->getTableName($relationEndpoint);
+                    $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
+                }
             }
+        }
+    
+        if( $table->timestamps ?? false ) {
+            $blueprint->timestamps();
+        }
+    
+        if( $table->soft_deletes ?? false ) {
+            $blueprint->softDeletes();
         }
         
         return $blueprint;
