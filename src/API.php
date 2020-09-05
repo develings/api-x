@@ -9,6 +9,7 @@ use API\DynamoDB\Migrator;
 use BaoPham\DynamoDb\DynamoDbQueryBuilder;
 use BaoPham\DynamoDb\Facades\DynamoDb;
 use BaoPham\DynamoDb\RawDynamoDbQuery;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -313,7 +314,7 @@ class API
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
     
-        $requestData = $request->all();
+        $requestData = $request->post();
         $validation = Validator::make($requestData, $rules);
         if ($validation->fails()) {
             $response = [
@@ -379,18 +380,18 @@ class API
 
         // Validate the data from within api fields
     
-        $instance = $this->createModelInstance($this->getEndpoint('device_user'));
-        $foreignKey = 'id';
-        $localKey = 'device_user_id';
-        $r = new BelongsTo($instance->newQuery(), $entity, 'id', 'id', 'device_user');
-        dd($r->first());
+        //$instance = $this->createModelInstance($this->getEndpoint('device_user'));
+        //$foreignKey = 'id';
+        //$localKey = 'device_user_id';
+        //$r = new BelongsTo($instance->newQuery(), $entity, 'device_user_id', 'id', 'device_user');
+        //dd($r->getQuery()->toSql(), $r->get());
         $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
 
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
-
-        $validation = Validator::make($request->all(), $rules);
+        
+        $validation = Validator::make($request->post(), $rules);
         if ($validation->fails()) {
             $response = [
                 'errors' => $validation->errors()
@@ -401,6 +402,8 @@ class API
         }
 
         $data = $validation->validated();
+        
+        //dd($data, $rules);
         abort_unless($data, 400, 'No data set');
 
         $model = $this->createModelInstance($api);
@@ -421,24 +424,14 @@ class API
         if ($api->timestamps) {
             $data['updated_at'] = date('Y-m-d H:i:s');
         }
-        
-        dd($data, $entityData);
-        
-        //dd($data);
 
         if ($model) {
-            $fillableFields = array_keys($api->fields);
-            if ($api->timestamps) {
-                $fillableFields[] = 'created_at';
-                $fillableFields[] = 'updated_at';
-                $fillableFields[] = 'device_user_id';
-            }
-            $entity->fillable($fillableFields);
+            $entity->fillable($api->getFieldNames());
             if ($model->getFillable()) {
                 //$data = array_intersect_key($data, array_flip($model->getFillable()));
             }
-            dd($entity, $data);
-            dd($data);
+            //dd($entity, $data);
+            //dd($data);
             $entity->update($data);
         } else {
             DB::table($api->getTableName())
@@ -599,10 +592,25 @@ class API
     {
         $entity = $this->find($api, $id);
         abort_unless($entity, 404);
+    
+        $data = $entity;
+        if ($data instanceof Model) {
+            $data = $data->toArray();
+        }
+    
+        if (is_object($data)) {
+            $data = (array) $data;
+        }
+    
+        //$data = $api->dataHydrate($entity);
+    
+        $data = $api->addRelations($data, $request->get('with'));
         
-        $data = $api->dataHydrate($entity);
+        return $api->dataHydrate($data);
         
-        return $api->addRelations($data, $request->get('with'));
+        //$data = $api->dataHydrate($entity);
+        //
+        //return $api->addRelations($data, $request->get('with'));
     }
     
     /**

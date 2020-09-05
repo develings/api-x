@@ -47,4 +47,13 @@ class RelationRule
     public function getDefault()
     {
     }
+    
+    public function toArray()
+    {
+        return [
+            'name' => $this->name,
+            'foreign_key' => $this->foreign_key,
+            'owner_key' => $this->owner_key,
+        ];
+    }
 }

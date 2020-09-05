@@ -32,6 +32,21 @@ class Relation
         $this->parse();
     }
     
+    public function isHidden(): bool
+    {
+        return (bool)($this->rules['hidden'] ?? false);
+    }
+    
+    public function cast($value)
+    {
+        $cast = $this->rules['cast'] ?? null;
+        if ($value && $cast && $cast->parameters[0] === 'timestamp') {
+            $value = strtotime($value);
+        }
+        
+        return $value;
+    }
+    
     public function getData($api, $data, $multiple = false)
     {
         // differentiate between an array of data or one item of data
@@ -76,6 +91,7 @@ class Relation
             $collectionKeyed = $collection->keyBy($rule->foreign_key);
             //dd($collectionKeyed, $rule);
             $ids = $collectionKeyed->filter()->toArray();
+            //dd($ids, $collectionKeyed);
             
             $result = $this->$methodName($api, $rule, $relation, $data, array_keys($ids));
             
@@ -86,8 +102,16 @@ class Relation
             $collectionArray = $collectionKeyed->toArray();
             $isMany = in_array($methodName, $relationTypesMany, true);
             
+            //dd($result);
             foreach ($result as $id => $item) {
-                $item = $item->toArray();
+                if (is_object($item)) {
+                    if (method_exists($item, 'toArray')) {
+                        $item = $item->toArray();
+                    } else {
+                        $item = (array) $item;
+                    }
+                }
+                $item = is_array($item) ? $item : $item->toArray();
                 $dataItem = $collectionArray[$item[$rule->owner_key]] ?? null;
                 if (!$dataItem) {
                     // item reference not found
@@ -126,10 +150,13 @@ class Relation
     
     public function belongsTo(Endpoint $api, RelationRule $rule, Endpoint $relation, $data, $ids)
     {
-        $builder = DB::table($relation->getTableName());
+        if (!$ids ){
+            return null;
+        }
         
-        $relationId = $rule->parameters[2] ?? 'id';
-        $builder->whereIn($relationId, $ids);
+        $builder = DB::table($this->getAPI()->base->getTableName($relation));
+        
+        $builder->whereIn($rule->owner_key, $ids);
         
         if ($relation->soft_deletes) {
             $builder->whereNull('deleted_at');
@@ -141,7 +168,7 @@ class Relation
             return $result;
         }
         
-        return $result->keyBy($relationId);
+        return $result->keyBy($rule->owner_key);
     }
     
     public function hasOne(Endpoint $api, RelationRule $rule, Endpoint $relation, $data, $ids)
@@ -174,14 +201,7 @@ class Relation
             return [];
         }
         
-        $foreignKey = $rule->parameters[1] ?? 'id';
-        $ownerKey = $rule->parameters[2] ?? 'id';
-        
-        return [
-            'foreign_key' => $foreignKey,
-            'owner_key' => $ownerKey,
-            'relation_id' => $rule->foreign_key
-        ];
+        return $rule->toArray();
     }
     
     /**

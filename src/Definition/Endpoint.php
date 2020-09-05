@@ -154,13 +154,43 @@ class Endpoint
         
         if ($this->relations) {
             foreach ($this->relations as $relation) {
-                dd($relation->getInfo());
+                $relationInfo = $relation->getInfo();
+                if (!$relationInfo) {
+                    continue;
+                }
+                $definitions[$relationInfo['foreign_key']] = 'nullable';
             }
         }
 
         return $definitions;
 
         dd($rules, $this->fields);
+    }
+    
+    public function getFieldNames()
+    {
+        $fields = array_keys($this->fields);
+        
+        if ($this->timestamps) {
+            $fields[] = 'created_at';
+            $fields[] = 'updated_at';
+        }
+        
+        if ($this->soft_deletes) {
+            $fields[] = 'deleted_at';
+        }
+        
+        if ($this->relations) {
+            foreach ($this->relations as $relation) {
+                $relationInfo = $relation->getInfo();
+                if (!$relationInfo) {
+                    continue;
+                }
+                $fields[] = $relationInfo['foreign_key'];
+            }
+        }
+        
+        return $fields;
     }
 
     public function getTableName(): string
@@ -265,6 +295,20 @@ class Endpoint
             }
 
             $output[$field->key] = $field->cast($data[$field->key]);
+        }
+        
+        if ($this->relations) {
+            foreach ($this->relations as $relation) {
+                if (!isset($data[$relation->key])) {
+                    continue;
+                }
+    
+                if ($relation->isHidden()) {
+                    continue;
+                }
+    
+                $output[$relation->key] = $relation->cast($data[$relation->key]);
+            }
         }
 
         if ($data && $this->timestamps) {
