@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use API\Definition\Base;
 
+/**
+ * Class Relation
+ * @package API\Definition
+ * @property RelationRule[] $rules
+ */
 class Relation
 {
+    use RuleTrait;
+    
     public $key;
     
     public $definition;
     
-    /**
-     * @var RelationRule[]
-     */
-    public $rules = [];
+    public $relationType;
     
     /**
      * Field constructor.
@@ -32,28 +36,9 @@ class Relation
         $this->parse();
     }
     
-    public function isHidden(): bool
+    public function getRelationTypesSingle()
     {
-        return (bool)($this->rules['hidden'] ?? false);
-    }
-    
-    public function cast($value)
-    {
-        $cast = $this->rules['cast'] ?? null;
-        if ($value && $cast && $cast->parameters[0] === 'timestamp') {
-            $value = strtotime($value);
-        }
-        
-        return $value;
-    }
-    
-    public function getData($api, $data, $multiple = false)
-    {
-        // differentiate between an array of data or one item of data
-        $ids = [];
-        $items = $multiple ? $data : [$data];
-        
-        $relationTypes = [
+        return [
             'hasOne',
             'belongsTo',
             'belongsToMany',
@@ -62,11 +47,24 @@ class Relation
             'morphToMany',
             'morphedToMany',
         ];
-        
-        $relationTypesMany = [
+    }
+    
+    public function getRelationTypesMultiple()
+    {
+        return [
             'hasMany',
             'hasManyThrough'
         ];
+    }
+    
+    public function getData($api, $data, $multiple = false)
+    {
+        // differentiate between an array of data or one item of data
+        $ids = [];
+        $items = $multiple ? $data : [$data];
+        
+        $relationTypes = $this->getRelationTypesSingle();
+        $relationTypesMany = $this->getRelationTypesMultiple();
         
         $relationTypesAll = array_merge($relationTypes, $relationTypesMany);
         /** @var API $apiClass */
@@ -139,10 +137,15 @@ class Relation
     {
         $parts = explode('|', $this->definition);
         
+        $types = array_merge($this->getRelationTypesSingle(), $this->getRelationTypesMultiple());
         $rules = [];
         foreach ($parts as $raw) {
             $relation = new RelationRule($this->key, $raw);
             $rules[$relation->type] = $relation;
+            
+            if (in_array($relation->type, $types, true)) {
+                $this->relationType = $relation->type;
+            }
         }
         
         $this->rules = $rules;

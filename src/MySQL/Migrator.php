@@ -189,7 +189,7 @@ class Migrator
                     $parameters = explode(',', $parameters[0]);
                 }
                 
-                if( $method === 'belongsTo' ) {
+                //if( $method === 'belongsTo' || $method === 'hasOne' ) {
                     $fieldName = $parameters[1] ?? $relationName . '_id';
                     $relationEndpoint = $this->api->getEndpoint($parameters[0]);
                     if( !$relationEndpoint ) {
@@ -197,19 +197,26 @@ class Migrator
                         continue;
                     }
                     $relationTableName = $this->api->base->getTableName($relationEndpoint);
-                    $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
-                }
+                    $field = $column->foreignId($fieldName);
+                    if ($relation->isNullable()) {
+                        $field = $field->nullable();
+                    }
+                    if ($relation->isUnique()) {
+                        $field = $field->unique();
+                    }
+                    $field->constrained($relationTableName);
+                //}
     
-                if( $method === 'hasOne' ) {
-                    $fieldName = $parameters[1] ?? $relationName . '_id';
-                    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
-                    if( !$relationEndpoint ) {
-                        $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
-                        continue;
-                    }
-                    $relationTableName = $this->api->base->getTableName($relationEndpoint);
-                    $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
-                }
+                //if( $method === 'hasOne' ) {
+                //    $fieldName = $parameters[1] ?? $relationName . '_id';
+                //    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
+                //    if( !$relationEndpoint ) {
+                //        $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
+                //        continue;
+                //    }
+                //    $relationTableName = $this->api->base->getTableName($relationEndpoint);
+                //    $column->foreignId($fieldName)->nullable()->constrained($relationTableName);
+                //}
             }
         }
     

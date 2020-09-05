@@ -13,8 +13,8 @@ use Illuminate\Validation\Concerns\ValidatesAttributes;
 
 class Endpoint
 {
-    const REQUEST_POST = 'post';
-    const REQUEST_PUT = 'put';
+    public const REQUEST_POST = 'post';
+    public const REQUEST_PUT = 'put';
     
     public $name;
 
@@ -161,10 +161,10 @@ class Endpoint
         if ($this->relations) {
             foreach ($this->relations as $relation) {
                 $relationInfo = $relation->getInfo();
-                if (!$relationInfo) {
+                if (!$relationInfo || !in_array($relation->relationType, ['hasOne', 'belongsTo'], true)) {
                     continue;
                 }
-                $definitions[$relationInfo['foreign_key']] = 'nullable';
+                $definitions[$relationInfo['foreign_key']] = $relation->getValidationRules();
             }
         }
 
@@ -189,7 +189,7 @@ class Endpoint
         if ($this->relations) {
             foreach ($this->relations as $relation) {
                 $relationInfo = $relation->getInfo();
-                if (!$relationInfo) {
+                if (!$relationInfo || !in_array($relation->relationType, ['hasOne', 'belongsTo'], true)) {
                     continue;
                 }
                 $fields[] = $relationInfo['foreign_key'];
@@ -226,16 +226,17 @@ class Endpoint
 
     public function fillDefaultValues(array $data, $originalData = [], $request = self::REQUEST_POST)
     {
+        $api = API::getInstance();
+        $isDynamoDb = $api->base->db->driver === DB::DRIVER_DYNAMO_DB;
         if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
-            $data['updated_at'] = "";
+            $data['updated_at'] = $isDynamoDb ? '' : null;
         }
     
         if ($this->soft_deletes && $request === self::REQUEST_POST) {
-            $data['deleted_at'] = "";
+            $data['deleted_at'] = $isDynamoDb ? '' : null;
         }
         
-        $api = API::getInstance();
         $userPlaceholders = $api->getUserPlaceholders();
         $userPlaceholderKeys = $userPlaceholders ? array_keys($userPlaceholders) : [];
 
@@ -250,30 +251,24 @@ class Endpoint
                 continue;
             }
 
-            $default = $field->getDefault();
-            
-
-            if (!$default) {
-                continue;
-            }
-
             if ($request === self::REQUEST_PUT && isset($originalData[$key])) {
                 continue;
             }
-            
-            $parameters = $default->parameters;
-            $parameterMethod = $parameters[0] ?? null;
-            if ($parameterMethod === 'alphanumeric') {
-                $data[$key] = Str::random($parameters[1] ?? 12);
-            } else if ($parameterMethod === 'uuid') {
-                $data[$key] = Str::uuid()->toString();
-            } else if($userPlaceholderKeys && in_array($parameterMethod, $userPlaceholderKeys, true)) {
-                $data[$key] = $userPlaceholders[$parameterMethod];
-            } else {
-                $data[$key] = $parameterMethod;
+    
+    
+            $data = $this->setDefaultValue($field, $data, $key, $userPlaceholderKeys, $userPlaceholders);
+        }
+        
+        if ($this->relations) {
+            foreach ($this->relations as $key => $relation) {
+                if ($relation->relationType !== 'hasOne' && $relation->relationType !== 'belongsTo') {
+                    continue;
+                }
+                
+                $data = $this->setDefaultValue($relation, $data, $relation->getInfo()['foreign_key'], $userPlaceholderKeys, $userPlaceholders);
             }
         }
-
+        
         return $data;
     }
 
@@ -419,5 +414,37 @@ class Endpoint
         }
         
         return $model;
+    }
+    
+    /**
+     * @param Field|Relation $field
+     * @param array $data
+     * @param int $key
+     * @param array $userPlaceholderKeys
+     * @param array $userPlaceholders
+     *
+     * @return array
+     */
+    private function setDefaultValue($field, array $data, string $key, array $userPlaceholderKeys, array $userPlaceholders): array
+    {
+        $default = $field->getDefault();
+        
+        if( !$default ) {
+            return $data;
+        }
+        
+        $parameters = $default->parameters;
+        $parameterMethod = $parameters[0] ?? null;
+        if( $parameterMethod === 'alphanumeric' ) {
+            $data[ $key ] = Str::random($parameters[1] ?? 12);
+        } else if( $parameterMethod === 'uuid' ) {
+            $data[ $key ] = Str::uuid()->toString();
+        } else if( $userPlaceholderKeys && in_array($parameterMethod, $userPlaceholderKeys, true) ) {
+            $data[ $key ] = $userPlaceholders[ $parameterMethod ];
+        } else {
+            $data[ $key ] = $parameterMethod;
+        }
+        
+        return $data;
     }
 }

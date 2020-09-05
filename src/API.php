@@ -394,7 +394,7 @@ class API
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
             
-            //dd($model, $data);
+            //dd($model, $data, $fillables);
             
             $model->saveOrFail();
             $id = $model->{$api->getIdentifier()};
@@ -620,7 +620,7 @@ class API
             //$model = new DynamoBuilder($model);
         } else {
             $model = DynamicModel::createInstance($tableName);
-            $model->fillable(array_keys($endpoint->fields));
+            $model->fillable($endpoint->getFieldNames());
         }
     
         return $model;

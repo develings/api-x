@@ -2,15 +2,21 @@
 
 namespace API\Definition;
 
+/**
+ * Class Field
+ * @package API\Definition
+ * @property Rule[] $rules
+ */
 class Field
 {
+    use RuleTrait;
+    
 	public $key;
 
 	public $type;
 
 	public $definition;
 
-	public $rules = [];
 
     /**
      * Field constructor.
@@ -51,34 +57,5 @@ class Field
 
 	}
 
-    /**
-     * @return Rule[]
-     */
-	public function getRules(): array
-    {
-        return $this->rules;
-    }
-
-    /**
-     * @return Rule|null
-     */
-    public function getDefault(): ?Rule
-    {
-        return $this->rules['default'] ?? null;
-    }
-
-    public function isHidden(): bool
-    {
-        return (bool)($this->rules['hidden'] ?? false);
-    }
-
-    public function cast($value)
-    {
-        $cast = $this->rules['cast'] ?? null;
-        if ($value && $cast && $cast->parameters[0] === 'timestamp') {
-            $value = strtotime($value);
-        }
-
-        return $value;
-    }
+ 
 }
