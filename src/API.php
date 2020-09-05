@@ -9,6 +9,7 @@ use API\DynamoDB\Migrator;
 use BaoPham\DynamoDb\DynamoDbQueryBuilder;
 use BaoPham\DynamoDb\Facades\DynamoDb;
 use BaoPham\DynamoDb\RawDynamoDbQuery;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -279,7 +280,7 @@ class API
         
         //dd($query->toDynamoDbQuery(), $api);
 
-        if ( $first && $this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
+        if ( $first && $this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
             return null;
         }
         
@@ -342,7 +343,7 @@ class API
         //$model = $this->getBuilder($api);
         $model = $this->createModelInstance($api);
 
-        $data = $api->fillDefaultValues($data, Endpoint::REQUEST_POST);
+        $data = $api->fillDefaultValues($data, [], Endpoint::REQUEST_POST);
         
         if ($model) {
             $fillables = $model->getFillable();
@@ -377,6 +378,12 @@ class API
         // Check permission if enabled
 
         // Validate the data from within api fields
+    
+        $instance = $this->createModelInstance($this->getEndpoint('device_user'));
+        $foreignKey = 'id';
+        $localKey = 'device_user_id';
+        $r = new BelongsTo($instance->newQuery(), $entity, 'id', 'id', 'device_user');
+        dd($r->first());
         $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
 
         // go through all the columns and also validate the data
@@ -406,7 +413,7 @@ class API
         }
         //$data = array_merge($entityData, $data);
         // compare and only fill data that is empty
-        $data = $api->fillDefaultValues($data, Endpoint::REQUEST_PUT);
+        $data = $api->fillDefaultValues($data, $entityData, Endpoint::REQUEST_PUT);
         
         // Unset values that should be unchangeable like ID
         //unset($data[$api->getIdentifier()]);
@@ -415,14 +422,23 @@ class API
             $data['updated_at'] = date('Y-m-d H:i:s');
         }
         
+        dd($data, $entityData);
+        
         //dd($data);
 
         if ($model) {
-            if ($model->getFillable()) {
-                $data = array_intersect_key($data, array_flip($model->getFillable()));
+            $fillableFields = array_keys($api->fields);
+            if ($api->timestamps) {
+                $fillableFields[] = 'created_at';
+                $fillableFields[] = 'updated_at';
+                $fillableFields[] = 'device_user_id';
             }
-            //dd($entity, $data);
-            $entity->fillable(array_keys($api->fields));
+            $entity->fillable($fillableFields);
+            if ($model->getFillable()) {
+                //$data = array_intersect_key($data, array_flip($model->getFillable()));
+            }
+            dd($entity, $data);
+            dd($data);
             $entity->update($data);
         } else {
             DB::table($api->getTableName())

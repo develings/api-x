@@ -167,6 +167,23 @@ class Relation
         return $result->keyBy($ownerKey);
     }
     
+    public function getInfo()
+    {
+        $rule = reset($this->rules);
+        if (!$rule) {
+            return [];
+        }
+        
+        $foreignKey = $rule->parameters[1] ?? 'id';
+        $ownerKey = $rule->parameters[2] ?? 'id';
+        
+        return [
+            'foreign_key' => $foreignKey,
+            'owner_key' => $ownerKey,
+            'relation_id' => $rule->foreign_key
+        ];
+    }
+    
     /**
      * @return API
      */

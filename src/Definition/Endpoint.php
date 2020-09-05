@@ -119,8 +119,10 @@ class Endpoint
             ])));
         }
         
+        $fields = $this->fields;
+        
         $definitions = [];
-        foreach ($this->fields as $key => $field) {
+        foreach ($fields as $key => $field) {
             $rules = $field->getRules();
             $def = '';
 
@@ -148,6 +150,12 @@ class Endpoint
             }
 
             $definitions[$key] = $def;
+        }
+        
+        if ($this->relations) {
+            foreach ($this->relations as $relation) {
+                dd($relation->getInfo());
+            }
         }
 
         return $definitions;
@@ -180,7 +188,7 @@ class Endpoint
         return null;
     }
 
-    public function fillDefaultValues(array $data, $request = self::REQUEST_POST)
+    public function fillDefaultValues(array $data, $originalData = [], $request = self::REQUEST_POST)
     {
         if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
@@ -209,7 +217,7 @@ class Endpoint
                 continue;
             }
 
-            if ($request === self::REQUEST_PUT && isset($data[$key])) {
+            if ($request === self::REQUEST_PUT && isset($originalData[$key])) {
                 continue;
             }
             
