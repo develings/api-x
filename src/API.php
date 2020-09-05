@@ -84,11 +84,11 @@ class API
         dd('mysq');
     }
 
-	public function setModels()
-    {
-        $model = new Model($this->definition);
-        $model->createModel($this->definition['api'][0]);
-    }
+	//public function setModels()
+    //{
+    //    $model = new Model($this->definition);
+    //    $model->createModel($this->definition['api'][0]);
+    //}
     
     public function openApiJson()
     {

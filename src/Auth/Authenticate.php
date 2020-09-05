@@ -16,9 +16,11 @@ class Authenticate
         /** @var API $api */
         $api = app()->get(API::class);
         
-        $routeParameters = $request->route()[2] ?? null;
+        $route = $request->route();
+        $routeParameters = $route[2] ?? null;
         $endpointName = $routeParameters['api'] ?? null;
-            
+        $routeName = $route[1]['as'] ?? null;
+        
         $default = $api->base->authentication ?: [];
         if (!is_array($default)) {
             $default = [$default];
@@ -34,24 +36,27 @@ class Authenticate
         
         $auths = collect(array_merge($authentication ?? [], $default));
         
-        $method = strtolower($request->method());
         $methods = [
-            'post' => 'create',
-            'put' => 'update',
-            'delete' => 'delete',
-            'patch' => 'update',
-            'get' => 'index',
+            'api.create' => 'create',
+            'api.update' => 'update',
+            'api.delete' => 'delete',
+            'api.update' => 'update',
+            'api.index' => 'index',
+            'api.get' => 'get',
         ];
         
         /** @var EndpointPath $path */
-        if($endpoint && ($path = $endpoint->{$methods[$method]} ?? null) && $path->authentication) {
+        if($endpoint && ($path = $endpoint->{$methods[$routeName]} ?? null) && $path->authentication) {
             $auths->prepend($path->authentication);
         }
-
-        //dd($auths, $s, $request->method());
+        
         foreach ($auths as $auth) {
             $expression = explode(':', $auth);
             $method = $expression[0] ?? null;
+            if ($method === 'none') {
+                break; // not allowed for anyone
+            }
+            
             abort_unless($method, 500, 'Authentication method missing');
 
             $className = '\API\\Auth\\' . ucfirst($method);
