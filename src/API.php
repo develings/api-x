@@ -253,39 +253,76 @@ class API
         //];
     }
 
-    public function find(Endpoint $api, $id, $identifierKey = null)
+    public function find(Endpoint $endpoint, $id, $identifierKey = null, $source = null)
     {
-        $identifierKey = $identifierKey ?: $api->getIdentifier();
+        $identifierKey = $identifierKey ?: $endpoint->getIdentifier();
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL) {
-            $model = DynamicModel::createInstance($this->base->getTableName($api));
-            $model->fillable(array_keys($api->fields));
+            $model = DynamicModel::createInstance($this->base->getTableName($endpoint));
+            $model->fillable(array_keys($endpoint->fields));
             //dd($model);
         } else {
-            $model = $this->getBuilder($api);
+            $model = $this->getBuilder($endpoint);
         }
         
         if ($model) {
             $query = $model->where($identifierKey, $id);
         } else {
-            $query = DB::table($api->getTableName())->where($identifierKey, $id);
+            $query = DB::table($endpoint->getTableName())->where($identifierKey, $id);
         }
+        
+        $this->buildQuery($endpoint, $query, $source);
 
-        if ( $this->base->db->driver === Definition\DB::DRIVER_MYSQL ) {
-            if ($api->soft_deletes) {
+        if ( $this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL ) {
+            if ($endpoint->soft_deletes) {
                 $query->whereNull('deleted_at');
             }
             $first = $query->first();
         } else {
             $first = $query->get()->first();
         }
+        //dd($endpoint, $id, $identifierKey, $query->getQuery(), $first);
         
         //dd($query->toDynamoDbQuery(), $api);
 
-        if ( $first && $this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB && $api->soft_deletes && $first->deleted_at ) {
+        if ( $first && $this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB && $endpoint->soft_deletes && $first->deleted_at ) {
             return null;
         }
         
         return $first;
+    }
+    
+    /**
+     * @param Endpoint $endpoint
+     * @param Builder $builder
+     */
+    public function buildQuery(Endpoint $endpoint, $builder, $source)
+    {
+        if (!$endpoint->find) {
+            return;
+        }
+        
+        $find = is_array($endpoint->find) ? $endpoint->find : [$endpoint->find];
+    
+        foreach ($find as $item) {
+            $parts = explode(':', $item);
+            $method = array_shift($parts);
+            
+            // user
+            $replacements = [];
+            if($user = $this->getUser()) {
+                $user = is_object($user) ? $user->toArray() : (array)$user;
+                foreach ($user as $key => $val) {
+                    $replacements['$user.' . $key] = $val;
+                }
+            }
+            
+            //dd($replacements, $this->user);
+            
+            $parts = str_replace(array_keys($replacements), array_values($replacements), $parts[0]);
+            $params = explode(',', $parts);
+            
+            $builder->$method(...$params);
+        }
     }
 
     public function get($name, $id, Request $request)

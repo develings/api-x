@@ -74,6 +74,8 @@ class Endpoint
     
     public $indexes;
     
+    public $find;
+    
     public function __construct(array $data)
     {
         $paths = ['index', 'create', 'update', 'delete', 'get'];

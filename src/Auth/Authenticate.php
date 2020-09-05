@@ -37,20 +37,32 @@ class Authenticate
         $auths = collect(array_merge($authentication ?? [], $default));
         
         $methods = [
-            'api.create' => 'create',
-            'api.update' => 'update',
+            'api.post' => 'create',
+            'api.put' => 'update',
             'api.delete' => 'delete',
-            'api.update' => 'update',
             'api.index' => 'index',
             'api.get' => 'get',
         ];
         
         /** @var EndpointPath $path */
-        if($endpoint && ($path = $endpoint->{$methods[$routeName]} ?? null) && $path->authentication) {
-            $auths->prepend($path->authentication);
+        if($endpoint && ($path = $endpoint->{$methods[$routeName]} ?? null) && $pathAuth = $path->authentication) {
+            if (is_array($pathAuth) && !isset($pathAuth['on'])) {
+                $auths->prepend(...$pathAuth);
+            } else {
+                $auths->prepend($pathAuth);
+            }
+            //$auths->prepend($path->authentication);
+            
+            //
         }
         
-        foreach ($auths as $auth) {
+        foreach ($auths as $authOne) {
+            $auth = $authOne;
+            $inherit = true;
+            if (is_array($auth)) {
+                $auth = $authOne['on'];
+                $inherit = $authOne['inherit'] ?? true;
+            }
             $expression = explode(':', $auth);
             $method = $expression[0] ?? null;
             if ($method === 'none') {
@@ -68,8 +80,12 @@ class Authenticate
             if($class->handle($request)) {
                 return $next($request);
             }
-        }
             
+            if (!$inherit) {
+                break;
+            }
+        }
+        
         return abort(403);
     }
 }
