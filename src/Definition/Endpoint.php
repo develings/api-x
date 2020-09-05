@@ -127,6 +127,10 @@ class Endpoint
         foreach ($fields as $key => $field) {
             $rules = $field->getRules();
             $def = '';
+            
+            if ($key === 'country') {
+                //dd($rules);
+            }
 
             foreach ($rules as $rule) {
                 $name = $rule->name;
@@ -135,12 +139,12 @@ class Endpoint
                     continue;
                 }
 
-                $path = $rule->name;
-                if ($name === 'unique' && !$rule->parameters) {
-                    $path .= ':' . $api->base->getTableName($this);
+                $path = $rule->raw;
+                if ($rule->name === 'unique' && !$rule->parameters) {
+                    $path = 'unique:' . $api->base->getTableName($this);
                 }
                 
-                if ($name === 'create_ignore' && $request === self::REQUEST_POST) {
+                if ($rule->name === 'create_ignore' && $request === self::REQUEST_POST) {
                     continue;
                 }
 
@@ -230,6 +234,10 @@ class Endpoint
         if ($this->soft_deletes && $request === self::REQUEST_POST) {
             $data['deleted_at'] = "";
         }
+        
+        $api = API::getInstance();
+        $userPlaceholders = $api->getUserPlaceholders();
+        $userPlaceholderKeys = $userPlaceholders ? array_keys($userPlaceholders) : [];
 
         foreach ($this->fields as $key => $field) {
             if ( isset($field->rules['id'], $data[ $field->key ]) ) {
@@ -259,6 +267,8 @@ class Endpoint
                 $data[$key] = Str::random($parameters[1] ?? 12);
             } else if ($parameterMethod === 'uuid') {
                 $data[$key] = Str::uuid()->toString();
+            } else if($userPlaceholderKeys && in_array($parameterMethod, $userPlaceholderKeys, true)) {
+                $data[$key] = $userPlaceholders[$parameterMethod];
             } else {
                 $data[$key] = $parameterMethod;
             }

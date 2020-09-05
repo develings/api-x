@@ -8,6 +8,8 @@ class EndpointPath
     
     public $authentication;
     
+    public $fill;
+    
     public function __construct(array $values = [])
     {
         foreach ($values as $k => $value) {

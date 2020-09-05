@@ -291,6 +291,19 @@ class API
         return $first;
     }
     
+    public function getUserPlaceholders()
+    {
+        $replacements = [];
+        if($user = $this->getUser()) {
+            $user = is_object($user) ? $user->toArray() : (array)$user;
+            foreach ($user as $key => $val) {
+                $replacements['$user.' . $key] = $val;
+            }
+        }
+        
+        return $replacements;
+    }
+    
     /**
      * @param Endpoint $endpoint
      * @param Builder $builder
@@ -308,15 +321,7 @@ class API
             $method = array_shift($parts);
             
             // user
-            $replacements = [];
-            if($user = $this->getUser()) {
-                $user = is_object($user) ? $user->toArray() : (array)$user;
-                foreach ($user as $key => $val) {
-                    $replacements['$user.' . $key] = $val;
-                }
-            }
-            
-            //dd($replacements, $this->user);
+            $replacements = $this->getUserPlaceholders();
             
             $parts = str_replace(array_keys($replacements), array_values($replacements), $parts[0]);
             $params = explode(',', $parts);
@@ -345,6 +350,7 @@ class API
 
         // Validate the data from within api fields
         $rules = $api->getValidationRules(Endpoint::REQUEST_POST);
+        //dd($rules);
 
         //dd($api, $rules);
         // go through all the columns and also validate the data
@@ -387,6 +393,8 @@ class API
             $fillables = $model->getFillable();
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
+            
+            //dd($model, $data);
             
             $model->saveOrFail();
             $id = $model->{$api->getIdentifier()};
