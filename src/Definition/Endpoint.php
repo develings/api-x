@@ -209,6 +209,9 @@ class Endpoint
 
     public function getTableName(): string
     {
+        $api = API::getInstance();
+        $prefix = $api->base->db->prefix;
+        
         $table = $this->db ?: $this->name;
         if ($this->model) {
             /** @var Model $class */
@@ -217,7 +220,7 @@ class Endpoint
             $table = $class->getTable() ?: $table;
         }
 
-        return $table;
+        return $prefix . $table;
     }
 
     /**

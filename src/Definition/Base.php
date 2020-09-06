@@ -26,14 +26,14 @@ class Base
     public $throttle;
 
     public $rate_limit;
-    
+
     /**
      * @var DB
      */
     public $db;
-    
+
     public $servers;
-    
+
     public function __construct(array $data)
     {
         foreach ($data as $key => $value) {
@@ -45,7 +45,7 @@ class Base
                     }
                     $value = $apis;
                 }
-    
+
                 if ($key === 'db') {
                     $value = new DB($value);
                 }
@@ -53,16 +53,18 @@ class Base
                 $this->$key = $value;
             }
         }
-        
+
         if (!$this->db) {
             $this->db = new DB();
         }
     }
-    
+
     public function getTableName(Endpoint $endpoint)
     {
+        return $endpoint->getTableName();
+
         $prefix = $this->db->prefix ?? '';
-        
+
         return $prefix . ($endpoint->getTableName());
     }
 }
