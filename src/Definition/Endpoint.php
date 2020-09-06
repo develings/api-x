@@ -26,6 +26,8 @@ class Endpoint
     public $timestamps;
 
     public $soft_deletes;
+    
+    public $unique;
 
     public $authentication;
 

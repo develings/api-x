@@ -352,14 +352,14 @@ class API
     public function post($name, Request $request)
     {
         // check if authentication is required
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
+        /** @var Endpoint $endpoint */
+        $endpoint = $this->getEndpoint($name);
+        abort_unless($endpoint, 404);
 
         // Check permission if enabled
 
         // Validate the data from within api fields
-        $rules = $api->getValidationRules(Endpoint::REQUEST_POST);
+        $rules = $endpoint->getValidationRules(Endpoint::REQUEST_POST);
 
         //dd($api, $rules);
         // go through all the columns and also validate the data
@@ -369,7 +369,7 @@ class API
     
         $requestData = $request->post();
         
-        $data = $api->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
+        $data = $endpoint->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
         
         $validation = Validator::make($data, $rules);
         if ($validation->fails()) {
@@ -383,14 +383,20 @@ class API
 
         $data = $validation->validated();
         
+        if ($endpoint->unique) {
+            //
+        }
+        
+        //dd($data, $rules);
+        
         // Check if a field is unique and then perform a query in the db
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
             /** @var Field[] $fields */
-            collect($api->fields)->filter(static function(Field $item) {
+            collect($endpoint->fields)->filter(static function(Field $item) {
                 return $item->isUnique();
-            })->each(function($field) use($data, $api) {
+            })->each(function($field) use($data, $endpoint) {
                 abort_if(
-                    isset($data[$field->key]) && $this->find($api, $data[$field->key], $field->key),
+                    isset($data[$field->key]) && $this->find($endpoint, $data[$field->key], $field->key),
                     409,
                     sprintf('Entity with given field (%s) value already exists.', $field->key)
                 );
@@ -398,7 +404,19 @@ class API
         }
         
         //$model = $this->getBuilder($api);
-        $model = $this->createModelInstance($api);
+        $model = $this->createModelInstance($endpoint);
+        
+        if ($model && $endpoint->unique) {
+            $query = $model->newQuery();
+            foreach ($endpoint->unique as $item) {
+                $query->where($item, $data[$item]);
+            }
+            if ($endpoint->soft_deletes) {
+                $query->whereNull('deleted_at');
+            }
+            $exists = $query->first();
+            abort_if($exists, 409, 'Entity exists');
+        }
         
         if ($model) {
             $fillables = $model->getFillable();
@@ -408,9 +426,9 @@ class API
             //dd($model, $data, $fillables);
             
             $model->saveOrFail();
-            $id = $model->{$api->getIdentifier()};
+            $id = $model->{$endpoint->getIdentifier()};
         } else {
-            $id = DB::table($api->getTableName())->insertGetId(
+            $id = DB::table($endpoint->getTableName())->insertGetId(
                 $data
             );
         }
@@ -418,7 +436,7 @@ class API
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
     
-        return $this->findOne($api, $id, $request, Endpoint::REQUEST_POST);
+        return $this->findOne($endpoint, $id, $request, Endpoint::REQUEST_POST);
     }
 
     public function put($name, $id, Request $request)

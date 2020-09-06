@@ -228,6 +228,10 @@ class Migrator
             $blueprint->softDeletes();
         }
         
+        if ($table->unique) {
+            $blueprint->unique($table->unique);
+        }
+        
         return $blueprint;
     }
 }
