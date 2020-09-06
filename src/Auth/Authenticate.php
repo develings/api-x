@@ -56,6 +56,8 @@ class Authenticate
             //
         }
         
+        //dump($auths, $request);
+        
         foreach ($auths as $authOne) {
             $auth = $authOne;
             $inherit = true;

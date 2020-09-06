@@ -288,6 +288,10 @@ class API
             return null;
         }
         
+        if (!$first) {
+            dd($first, $id, $identifierKey, $source, $query->getQuery()->toSql());
+        }
+        
         return $first;
     }
     
@@ -310,7 +314,7 @@ class API
      */
     public function buildQuery(Endpoint $endpoint, $builder, $source)
     {
-        if (!$endpoint->find) {
+        if (!$endpoint->find || $source === Endpoint::REQUEST_POST) {
             return;
         }
         
@@ -368,7 +372,7 @@ class API
             ];
 
             // distinguish between unique errors and normal errors and change to 409 if necessary
-            return response($response, 409);
+            return response($response, 400);
         }
 
         $data = $validation->validated();
@@ -410,7 +414,7 @@ class API
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
     
-        return $this->findOne($api, $id, $request);
+        return $this->findOne($api, $id, $request, Endpoint::REQUEST_POST);
     }
 
     public function put($name, $id, Request $request)
@@ -434,7 +438,7 @@ class API
         //$r = new BelongsTo($instance->newQuery(), $entity, 'device_user_id', 'id', 'device_user');
         //dd($r->getQuery()->toSql(), $r->get());
         $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
-        dd($rules);
+        //dd($rules);
 
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
@@ -625,6 +629,7 @@ class API
         } else {
             $model = DynamicModel::createInstance($tableName);
             $model->fillable($endpoint->getFieldNames());
+            //$model->timestamps = false;
         }
     
         return $model;
@@ -637,9 +642,9 @@ class API
      *
      * @return array|mixed|null
      */
-    private function findOne(Endpoint $api, $id, Request $request)
+    private function findOne(Endpoint $api, $id, Request $request, $source = null)
     {
-        $entity = $this->find($api, $id);
+        $entity = $this->find($api, $id, null, $source);
         abort_unless($entity, 404);
     
         $data = $entity;

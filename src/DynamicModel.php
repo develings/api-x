@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasRelationships;
 class DynamicModel extends \Illuminate\Database\Eloquent\Model
 {
     use HasRelationships;
+    //public $timestamps = false;
     //public function __construct(string $table, array $attributes = [])
     //{
     //    $this->table = $table;
