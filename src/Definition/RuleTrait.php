@@ -2,6 +2,8 @@
 
 namespace API\Definition;
 
+use API\API;
+
 trait RuleTrait
 {
     public $rules = [];
@@ -37,17 +39,17 @@ trait RuleTrait
         return (bool)($this->rules['unique'] ?? false);
     }
     
-    public function getValidationRules()
+    public function getValidationRules(Endpoint $endpoint)
     {
         $rules = [];
         if ($this->isUnique()) {
-            $rules[] = 'unique';
-        }
-        if ($this->isNullable()) {
+            $api = \API\API::getInstance();
+            $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
+        } else if ($this->isNullable()) {
             $rules[] = 'nullable';
         }
         
-        return $rules ? implode('|', $rules) : '';
+        return $rules;
     }
     
     public function cast($value)

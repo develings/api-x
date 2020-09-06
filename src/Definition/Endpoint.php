@@ -134,6 +134,11 @@ class Endpoint
 
             foreach ($rules as $rule) {
                 $name = $rule->name;
+                
+                if ($name === 'tinyInteger') {
+                    //dd($name);
+                    $name = 'number';
+                }
 
                 if (!in_array($name, $validators, true)) {
                     continue;
@@ -152,7 +157,7 @@ class Endpoint
             }
             
             if (!$def) {
-                continue;
+                //continue;
             }
 
             $definitions[$key] = $def;
@@ -164,7 +169,7 @@ class Endpoint
                 if (!$relationInfo || !in_array($relation->relationType, ['hasOne', 'belongsTo'], true)) {
                     continue;
                 }
-                $definitions[$relationInfo['foreign_key']] = $relation->getValidationRules();
+                $definitions[$relationInfo['foreign_key']] = $relation->getValidationRules($this);
             }
         }
 

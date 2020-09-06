@@ -350,15 +350,18 @@ class API
 
         // Validate the data from within api fields
         $rules = $api->getValidationRules(Endpoint::REQUEST_POST);
-        //dd($rules);
 
         //dd($api, $rules);
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
     
+    
         $requestData = $request->post();
-        $validation = Validator::make($requestData, $rules);
+        
+        $data = $api->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
+        
+        $validation = Validator::make($data, $rules);
         if ($validation->fails()) {
             $response = [
                 'errors' => $validation->errors()
@@ -369,6 +372,8 @@ class API
         }
 
         $data = $validation->validated();
+        
+        //dd($data, $rules);
         
         // Check if a field is unique and then perform a query in the db
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
@@ -386,8 +391,6 @@ class API
         
         //$model = $this->getBuilder($api);
         $model = $this->createModelInstance($api);
-
-        $data = $api->fillDefaultValues($data, [], Endpoint::REQUEST_POST);
         
         if ($model) {
             $fillables = $model->getFillable();
@@ -431,6 +434,7 @@ class API
         //$r = new BelongsTo($instance->newQuery(), $entity, 'device_user_id', 'id', 'device_user');
         //dd($r->getQuery()->toSql(), $r->get());
         $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
+        dd($rules);
 
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
