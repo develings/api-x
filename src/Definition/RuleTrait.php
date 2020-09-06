@@ -29,24 +29,36 @@ trait RuleTrait
         return (bool)($this->rules['hidden'] ?? false);
     }
     
+    public function has(string $name): bool
+    {
+        return (bool)($this->rules[$name] ?? false);
+    }
+    
     public function isNullable(): bool
     {
-        return (bool)($this->rules['nullable'] ?? false);
+        return $this->has('nullable');
     }
     
     public function isUnique(): bool
     {
-        return (bool)($this->rules['unique'] ?? false);
+        return $this->has('unique');
     }
     
-    public function getValidationRules(Endpoint $endpoint)
+    public function getValidationRules(Endpoint $endpoint, array $validators = null)
     {
         $rules = [];
-        if ($this->isUnique()) {
-            $api = \API\API::getInstance();
-            $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
-        } else if ($this->isNullable()) {
-            $rules[] = 'nullable';
+        foreach ($this->rules as $name => $rule) {
+            if (!in_array($name, $validators, true)) {
+                continue;
+            }
+            
+            if ($name === 'unique') {
+                $api = \API\API::getInstance();
+                $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
+                continue;
+            }
+            
+            $rules[] = $name;
         }
         
         return $rules;

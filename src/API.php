@@ -135,8 +135,8 @@ class API
 
         if ($api->soft_deletes) {
             $query->where(static function($query) {
-                $query->where('deleted_at', '');
-                $query->orWhereNull('deleted_at');
+                $query->whereNull('deleted_at');
+                //$query->orWhereNull('deleted_at');
             });
         }
         
@@ -156,7 +156,7 @@ class API
         }
     
         if ($offset) {
-            $query->afterKey(['uuid' => $offset, 'created_at' => '2020-08-17 13:50:19']);
+            //$query->afterKey(['uuid' => $offset, 'created_at' => '2020-08-17 13:50:19']);
             //dd($query->toDynamoDbQuery(), $query->get());
         }
         
@@ -167,7 +167,7 @@ class API
             $data = $query->paginate($perPage);
         }
         
-        $items = $api->dataHydrateItems($data->items());
+        $items = $api->dataHydrateItems($data->items(), $request);
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
 
         $output = $data->toArray();
@@ -187,7 +187,9 @@ class API
             return $query;
         }
         
-        $model = $query->getModel();
+        //return $query;
+        
+        //$model = $query->getModel();
         //$query->setModel($model);
         //$result = DynamoDb::table($this->base->getTableName($api))
         //    ->setIndexName('device_user_uuid_index')
@@ -218,11 +220,15 @@ class API
         
         $where = $api->condition;
         $where = is_array($where) ? $where : [$where];
+        $userPlaceholders = $this->getUserPlaceholders();
+        $userPlaceholdersKeys = array_keys($userPlaceholders);
+        $userPlaceholdersValues = array_values($userPlaceholders);
     
         foreach ($where as $item) {
             [$type, $condition] = explode(':', $item);
             //$userInfo = $this->user->toArray();
-            $condition = str_replace('user.uuid', $this->user->uuid, $condition);
+            //$condition = str_replace('user.uuid', $this->user->uuid, $condition);
+            $condition = str_replace($userPlaceholdersKeys, $userPlaceholdersValues, $condition);
             $e = explode(',', $condition);
             
             $query->$type(...$e);
@@ -288,9 +294,9 @@ class API
             return null;
         }
         
-        if (!$first) {
-            dd($first, $id, $identifierKey, $source, $query->getQuery()->toSql());
-        }
+        //if (!$first) {
+        //    dd($first, $id, $identifierKey, $source, $query->getQuery()->toSql());
+        //}
         
         return $first;
     }
@@ -376,8 +382,6 @@ class API
         }
 
         $data = $validation->validated();
-        
-        //dd($data, $rules);
         
         // Check if a field is unique and then perform a query in the db
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
@@ -521,6 +525,8 @@ class API
             //$data = array_intersect_key($data, array_flip($model->getFillable()));
             //$model->fill($data);
             //
+            $entity->fillable($api->getFieldNames());
+            //dd($entity, $method, $data);
             $affected = $entity->$method($data);
             //$modelId = $model->{$api->identifier};
             //dd('missing');
@@ -660,7 +666,7 @@ class API
     
         $data = $api->addRelations($data, $request->get('with'));
         
-        return $api->dataHydrate($data);
+        return $api->dataHydrate($data, $request);
         
         //$data = $api->dataHydrate($entity);
         //

@@ -6,6 +6,7 @@ use API\API;
 use API\DynamoBuilder;
 use API\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -128,9 +129,9 @@ class Endpoint
             $rules = $field->getRules();
             $def = '';
             
-            if ($key === 'country') {
-                //dd($rules);
-            }
+            //if ($key === 'country') {
+            //    //dd($rules);
+            //}
 
             foreach ($rules as $rule) {
                 $name = $rule->name;
@@ -169,7 +170,7 @@ class Endpoint
                 if (!$relationInfo || !in_array($relation->relationType, ['hasOne', 'belongsTo'], true)) {
                     continue;
                 }
-                $definitions[$relationInfo['foreign_key']] = $relation->getValidationRules($this);
+                $definitions[$relationInfo['foreign_key']] = $relation->getValidationRules($this, $validators);
             }
         }
 
@@ -282,7 +283,7 @@ class Endpoint
         return $this->identifier ?: 'id';
     }
 
-    public function dataHydrate($data)
+    public function dataHydrate($data, Request $request = null)
     {
         if ($data instanceof Model) {
             $data = $data->toArray();
@@ -295,6 +296,12 @@ class Endpoint
         if ($this->soft_deletes && $data && array_key_exists('deleted_at', $data)) {
             unset($data['deleted_at']);
         }
+        
+        $selectedFields = [];
+        if ($request && ($sentFields = $request->get('fields'))) {
+            $selectedFields = explode(',', $sentFields);
+        }
+        //dd($selectedFields, $request);
 
         $output = [];
         foreach ($this->fields as $field) {
@@ -303,6 +310,10 @@ class Endpoint
             }
 
             if ($field->isHidden()) {
+                continue;
+            }
+            
+            if ($selectedFields && !in_array($field->key, $selectedFields, true)) {
                 continue;
             }
 
@@ -324,8 +335,12 @@ class Endpoint
         }
 
         if ($data && $this->timestamps) {
-            $output['created_at'] = $output['created_at'] ?? $data['created_at'] ?? null;
-            $output['updated_at'] = $output['updated_at'] ?? $data['updated_at'] ?? null;
+            if (!$selectedFields || in_array('created_at', $selectedFields, true)) {
+                $output['created_at'] = $output['created_at'] ?? $data['created_at'] ?? null;
+            }
+            if (!$selectedFields || in_array('updated_at', $selectedFields, true)) {
+                $output['updated_at'] = $output['updated_at'] ?? $data['updated_at'] ?? null;
+            }
         }
 
         return $output;
@@ -365,11 +380,11 @@ class Endpoint
         return $data;
     }
 
-    public function dataHydrateItems($items)
+    public function dataHydrateItems($items, Request $request = null)
     {
         $items = $items instanceof Collection ? $items : collect($items);
-        return $items->map(function($item) {
-            return $this->dataHydrate((array) $item);
+        return $items->map(function($item) use($request){
+            return $this->dataHydrate((array) $item, $request);
         });
     }
 
