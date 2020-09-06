@@ -371,6 +371,8 @@ class API
         
         $data = $endpoint->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
         
+        //dd($data, $rules);
+        
         $validation = Validator::make($data, $rules);
         if ($validation->fails()) {
             $response = [
