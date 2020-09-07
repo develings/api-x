@@ -2,6 +2,7 @@
 
 namespace API;
 
+use API\Command\MakeModelCommand;
 use API\Command\MigrateCommand;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,7 +17,8 @@ class APIServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                MigrateCommand::class
+                MigrateCommand::class,
+                MakeModelCommand::class
             ]);
         }
     }

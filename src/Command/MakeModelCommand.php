@@ -15,14 +15,14 @@ use Aws\DynamoDb\Exception\DynamoDbException;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
-class MigrateCommand extends Command
+class MakeModelCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'api:make model {--table=}';
+    protected $signature = 'api:make-model {--table=}';
     
     /**
      * The console command description.
@@ -37,18 +37,15 @@ class MigrateCommand extends Command
         
         $api = API::getInstance();
         
-        if ($api->base->db->driver === DB::DRIVER_MYSQL) {
-            $migrator = new MySQLMigrator($api);
-        }
-        
-        $migrator->setInput($this->input);
-        $migrator->setOutput($this->output);
-        
         $this->line('');
-        $this->line('<info>Starting</info> migration...');
+        $this->line('<info>Creating</info> model class...');
         $this->line('');
         
         $tables = $tables ? explode(',', $tables) : [];
+        
+        if (!$tables) {
+            $tables = array_keys($api->getApis());
+        }
         
         $modelCreator = new Model();
         foreach ($tables as $table) {
@@ -59,9 +56,8 @@ class MigrateCommand extends Command
             }
             
             $modelCreator->createModel($endpoint);
+            $this->line('<info>Success</info> ' . $endpoint->name);
         }
-        
-        $migrator->migrate($tables);
         
         $this->line('');
         $this->info('All done');

@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DummyClass extends Model
 {
+	public $table = 'dummyTableName';
+
 dummyProperties
 
 dummyMethods

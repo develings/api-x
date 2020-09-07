@@ -56,6 +56,18 @@ class Field
 	{
 
 	}
+	
+	public function getPossibleTypes()
+    {
+        return [
+            ''
+        ];
+    }
+	
+	public function getPhpType()
+    {
+        $types = ['string', 'int', 'boolean', 'float', 'array', 'object', 'null'];
+    }
 
  
 }
