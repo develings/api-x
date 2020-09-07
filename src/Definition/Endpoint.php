@@ -17,6 +17,11 @@ class Endpoint
     public const REQUEST_POST = 'post';
     public const REQUEST_PUT = 'put';
     
+    /**
+     * @var array
+     */
+    public $definition;
+    
     public $name;
 
     public $model;
@@ -82,26 +87,32 @@ class Endpoint
     public function __construct(array $data)
     {
         $paths = ['index', 'create', 'update', 'delete', 'get'];
+        $this->definition = $data;
+        
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                if ($key === 'fields') {
-                    foreach ($value as $field => $v) {
-                        $value[$field] = new Field($field, $v);
-                    }
-                }
-                
-                if (in_array($key, $paths, true)) {
-                    $value = new EndpointPath($value);
-                }
-
-                if ($key === 'relations') {
-                    foreach ($value as $field => $v) {
-                        $value[$field] = new Relation($field, $v);
-                    }
-                }
-                $this->$key = $value;
+            if (!property_exists($this, $key)) {
+                continue;
             }
+            
+            if ($key === 'fields') {
+                foreach ($value as $field => $v) {
+                    $value[$field] = new Field($field, $v);
+                }
+            }
+            
+            if (in_array($key, $paths, true)) {
+                $value = new EndpointPath($value);
+            }
+
+            if ($key === 'relations') {
+                foreach ($value as $field => $v) {
+                    $value[$field] = new Relation($field, $v);
+                }
+            }
+            
+            $this->$key = $value;
         }
+        
     }
 
     public function getValidationRules($request = self::REQUEST_POST)

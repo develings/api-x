@@ -7,18 +7,6 @@ use Illuminate\Support\Str;
 
 class Model
 {
-    public $definition;
-
-    /**
-     * Model constructor.
-     *
-     * @param $definition
-     */
-    public function __construct($definition)
-    {
-        $this->definition = $definition;
-    }
-
     public function createModel(array $definition)
     {
         $stub = File::get(app_path('API/stubs/Model.stub'));
