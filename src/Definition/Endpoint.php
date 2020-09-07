@@ -297,7 +297,7 @@ class Endpoint
         if (is_object($data)) {
             $data = (array) $data;
         }
-
+        
         if ($this->soft_deletes && $data && array_key_exists('deleted_at', $data)) {
             unset($data['deleted_at']);
         }
@@ -327,7 +327,8 @@ class Endpoint
         
         if ($this->relations) {
             foreach ($this->relations as $relation) {
-                if (!isset($data[$relation->key])) {
+                $key = $relation->getRelationRule()->foreign_key;
+                if (!isset($data[$key])) {
                     continue;
                 }
     
@@ -335,7 +336,7 @@ class Endpoint
                     continue;
                 }
     
-                $output[$relation->key] = $relation->cast($data[$relation->key]);
+                $output[$key] = $relation->cast($data[$key]);
             }
         }
 
@@ -347,6 +348,8 @@ class Endpoint
                 $output['updated_at'] = $output['updated_at'] ?? $data['updated_at'] ?? null;
             }
         }
+        
+        //dd($data, $output, $this->relations);
 
         return $output;
     }
@@ -368,7 +371,7 @@ class Endpoint
 
         /** @var Relation[] $relationsAll */
         $relationsAll = collect($this->relations)->keyBy('key');
-
+        
         foreach ($relations as $relation) {
             $relation = explode(':', $relation);
             $name = array_shift($relation);

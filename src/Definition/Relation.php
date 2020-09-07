@@ -56,6 +56,11 @@ class Relation
             'hasManyThrough'
         ];
     }
+    
+    public function getRelationRule(): ?RelationRule
+    {
+        return $this->rules[$this->relationType] ?? null;
+    }
 
     public function getData($api, $data, $multiple = false)
     {
@@ -86,12 +91,13 @@ class Relation
 
             abort_unless($relation, 500, 'Relation not found');
 
-            $collectionKeyed = $collection->keyBy($rule->type === 'belongsTo' ? $rule->owner_key : $rule->foreign_key);
-            //dd($collectionKeyed, $rule);
+            //$collectionKeyed = $collection->keyBy($rule->type === 'belongsTo' ? $rule->owner_key : $rule->foreign_key);
+            $collectionKeyed = $collection->keyBy($rule->foreign_key);
             $ids = $collectionKeyed->filter()->toArray();
             //dd($ids, $collectionKeyed);
 
             $result = $this->$methodName($api, $rule, $relation, $data, array_keys($ids));
+            //dd($rule, $result, $collection);
 
             if (!$result) {
                 continue;
@@ -110,6 +116,7 @@ class Relation
                     }
                 }
                 $item = is_array($item) ? $item : $item->toArray();
+                //dd($item, $items);
                 $dataItem = $collectionArray[$item[$rule->owner_key]] ?? null;
                 if (!$dataItem) {
                     // item reference not found
@@ -117,11 +124,12 @@ class Relation
                 }
 
                 $itemFormatted = $relation->dataHydrate($item);
+                //dd($itemFormatted, $dataItem);
 
                 if (!isset($dataItem[$this->key])) {
                     $collectionArray[$item[$rule->owner_key]][$this->key] = $isMany ? [] : $itemFormatted;
                 }
-
+                
                 if ($isMany) {
                     $collectionArray[$item[$rule->owner_key]][$this->key][] = $itemFormatted;
                 }

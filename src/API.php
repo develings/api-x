@@ -684,10 +684,9 @@ class API
     
         //$data = $api->dataHydrate($entity);
     
-        $data = $api->addRelations($data, $request->get('with'));
+        $data = $api->dataHydrate($data, $request);
         
-        return $api->dataHydrate($data, $request);
-        
+        return $api->addRelations($data, $request->get('with'));
         //$data = $api->dataHydrate($entity);
         //
         //return $api->addRelations($data, $request->get('with'));
