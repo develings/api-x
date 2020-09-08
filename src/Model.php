@@ -21,17 +21,19 @@ class Model
 
         $stub = File::get(__DIR__ . '/stubs/Model.stub');
 
-        $fields = '';
+        $dynamicFields = '';
         foreach ($endpoint->fields as $key => $field) {
             $tab = '    ';
-            $def = $tab .'/**' . PHP_EOL;
-            $def .= $tab . ' * @var ' . $field->getPhpType() . PHP_EOL;
-            $def .= $tab . ' *' . PHP_EOL;
-            $def .= $tab . ' * Definition: ' . $field->definition . PHP_EOL;
-            $def .= $tab . ' */' . PHP_EOL;
-            $def .= $tab . '//public $' . $key . ';' . PHP_EOL . PHP_EOL;
+            //$def = $tab .'/**' . PHP_EOL;
+            //$def .= $tab . ' * @var ' . $field->getPhpType() . PHP_EOL;
+            //$def .= $tab . ' *' . PHP_EOL;
+            //$def .= $tab . ' * Definition: ' . $field->definition . PHP_EOL;
+            //$def .= $tab . ' */' . PHP_EOL;
+            //$def .= $tab . '//public $' . $key . ';' . PHP_EOL . PHP_EOL;
+    
+            $def = ' * @property ' . $field->getPhpType() . ' ' . $key . PHP_EOL;
 
-            $fields .= $def;
+            $dynamicFields .= $def;
         }
 
         $methods = [];
@@ -73,6 +75,12 @@ class Model
                     ' foreignKey' => $foreignKey ? ', ' . $foreignKey : '',
                     ' ownerKey' => $ownerKey ? ', "' . $ownerKey . '"' : '',
                 ];
+                
+                if ($foreignKey) {
+                    $def = ' * @property string ' . $rule->foreign_key . PHP_EOL;
+    
+                    $dynamicFields .= $def;
+                }
 
                 $methods[] = str_replace(
                     array_keys($relationData),
@@ -87,7 +95,8 @@ class Model
                 'DummyClass',
                 "dummyNamespace;\n",
                 'dummyTableName',
-                "dummyMethods"
+                "dummyMethods",
+                'dummyProperties'
             ],
             [
                 ucfirst(Str::camel($definition['name'])),
@@ -98,7 +107,8 @@ class Model
             $stub
         );
 
-        $class = str_replace('dummyProperties', $fields, $stub);
+        //$class = str_replace('dummyProperties', '', $stub);
+        $class = str_replace('dummyDynamicProperties', $dynamicFields, $stub);
 
         //dd($class);
 

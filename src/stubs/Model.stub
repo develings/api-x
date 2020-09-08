@@ -3,6 +3,9 @@
 dummyNamespace;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+dummyDynamicProperties
+ */
 class DummyClass extends Model
 {
 	public $table = 'dummyTableName';

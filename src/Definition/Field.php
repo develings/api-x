@@ -10,7 +10,7 @@ namespace API\Definition;
 class Field
 {
     use RuleTrait;
-    
+
 	public $key;
 
 	public $type;
@@ -56,18 +56,20 @@ class Field
 	{
 
 	}
-	
+
 	public function getPossibleTypes()
     {
         return [
             ''
         ];
     }
-	
+
 	public function getPhpType()
     {
         $types = ['string', 'int', 'boolean', 'float', 'array', 'object', 'null'];
+
+        return 'string';
     }
 
- 
+
 }
