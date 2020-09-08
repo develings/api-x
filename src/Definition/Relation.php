@@ -42,7 +42,7 @@ class Relation
             'hasOne',
             'belongsTo',
             'belongsToMany',
-            'haeOneThrough',
+            'hasOneThrough',
             'morphTo',
             'morphToMany',
             'morphedToMany',

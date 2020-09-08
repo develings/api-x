@@ -41,17 +41,37 @@ class Model
     {
         return \$this->methodName(relationTable foreignKey ownerKey);
     }";
+            //dd($endpoint->relations);
             foreach ($endpoint->relations as $name => $relation) {
                 $rule = $relation->getRelationRule();
 
+                if (!$rule) {
+                    abort(sprintf('Relation (%s) does not exist', $relation->relationType));
+                }
+                //dd($rule);
                 $relationEndpoint = $api->getEndpoint($rule->target);
+                $foreignKey = $rule->foreign_key;
+                $ownerKey = $rule->owner_key;
+                
+                if ($relation->relationType === 'hasOneThrough' || $relation->relationType === 'hasManyThrough') {
+                    $foreignEndpoint = $api->getEndpoint($foreignKey);
+                    $foreignKey = ucfirst(Str::camel($foreignEndpoint->name)) . '::class';
+                    $ownerKey = null;
+                } else {
+                    $foreignKey = '"' . $foreignKey . '"';
+                }
+                
+                if ($relation->relationType === 'hasMany') {
+                    $foreignKey = null;
+                    $ownerKey = null;
+                }
 
                 $relationData = [
-                    'relationName' => $name,
+                    'relationName' => Str::camel($name),
                     'methodName' => $relation->relationType,
                     'relationTable' => $rule->target ?  ucfirst(Str::camel($relationEndpoint->name)) . '::class' : '',
-                    ' foreignKey' => $rule->foreign_key ? ', "' . $rule->foreign_key . '"' : '',
-                    ' ownerKey' => $rule->owner_key ? ', "' . $rule->owner_key . '"' : '',
+                    ' foreignKey' => $foreignKey ? ', ' . $foreignKey : '',
+                    ' ownerKey' => $ownerKey ? ', "' . $ownerKey . '"' : '',
                 ];
 
                 $methods[] = str_replace(
