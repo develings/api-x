@@ -61,7 +61,10 @@ class Endpoint
     public $fields_hidden;
 
     public $fields_cast;
-
+    
+    /**
+     * @var EndpointPath
+     */
     public $create;
 
     public $update;

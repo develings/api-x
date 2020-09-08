@@ -29,7 +29,7 @@ class Model
             $def .= $tab . ' *' . PHP_EOL;
             $def .= $tab . ' * Definition: ' . $field->definition . PHP_EOL;
             $def .= $tab . ' */' . PHP_EOL;
-            $def .= $tab . 'public $' . $key . ';' . PHP_EOL . PHP_EOL;
+            $def .= $tab . '//public $' . $key . ';' . PHP_EOL . PHP_EOL;
 
             $fields .= $def;
         }

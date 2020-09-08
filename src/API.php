@@ -355,6 +355,8 @@ class API
         /** @var Endpoint $endpoint */
         $endpoint = $this->getEndpoint($name);
         abort_unless($endpoint, 404);
+        
+        //$endpoint->create->triggerAfter();
 
         // Check permission if enabled
 
@@ -429,6 +431,11 @@ class API
             
             $model->saveOrFail();
             $id = $model->{$endpoint->getIdentifier()};
+            
+            if ($endpoint->create && $endpoint->create->after) {
+                $endpoint->create->triggerAfter($model);
+            }
+            
         } else {
             $id = DB::table($endpoint->getTableName())->insertGetId(
                 $data
