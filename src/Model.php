@@ -35,6 +35,15 @@ class Model
 
             $dynamicFields .= $def;
         }
+        
+        if ($endpoint->timestamps) {
+            $dynamicFields .= ' * @property string created_at' . PHP_EOL;
+            $dynamicFields .= ' * @property string updated_at' . PHP_EOL;
+        }
+        
+        if ($endpoint->soft_deletes) {
+            $dynamicFields .= ' * @property string deleted_at' . PHP_EOL;
+        }
 
         $methods = [];
         if ($endpoint->relations) {

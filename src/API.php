@@ -101,10 +101,11 @@ class API
         $prefix = $this->base->endpoint ?: '';
     
         app()->routeMiddleware([
-            'api.auth' => \API\Auth\Authenticate::class
+            'api.auth.member' => \API\Auth\AuthenticateMember::class,
+            'api.auth' => \API\Auth\Authenticate::class,
         ]);
 
-        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth', 'as' => 'api'], static function() {
+        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
             Route::get('api.json',['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
             Route::get('migrate',['as' => 'migrate', 'uses' => '\API\Routes@migrate']); //
             
