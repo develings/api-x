@@ -98,10 +98,10 @@ class Migrator
         $column = null;
         $modifiers = [
             'after', 'autoIncrement', 'charset', 'collation', 'comment',
-            'first', 'nullable', 'storedAs', 'unsigned', 'useCurrent', 'virtualAs',
+            'first', 'storedAs', 'unsigned', 'useCurrent', 'virtualAs',
             'generatedAs', 'always', 'spatialIndex', 'index', 'persisted', 'primary',
             'type',
-            //'unique', 'default'
+            //'unique', 'default', 'nullable'
         ];
         
         foreach ($parts as $part) {
@@ -115,18 +115,24 @@ class Migrator
             }
             
             // handle special modifiers such as unsigned, index
+            dump($field->key . ' - '. $method);
             if (in_array($method, $modifiers, true)) {
-                $column->$method(...$parameters);
+                try {
+                    $column->$method(...$parameters);
+                } catch (\Throwable $e) {
+                    dd($e, $field);
+                }
                 continue;
             }
             
             if( !method_exists($column, $method)  ) {
                 // method does not exist in laravel
-                
-                if (!$this->methods($column, $key, $method, $parameters)) {
+                $passed = $this->methods($column, $key, $method, $parameters);
+                if (!$passed) {
                     // custom method does not exist in php api
                     $this->error('Method does not exist: ' . $method);
                 }
+                //$column = $passed;
                 
                 continue;
             }
@@ -140,12 +146,12 @@ class Migrator
     public function methods($column, $key, $method, $parameters = null)
     {
         if ($method === 'password') {
-            $column->string($key, ...$parameters);
+            return $column->string($key, ...$parameters);
             return true;
         }
     
         if ($method === 'email') {
-            $column->string($key, ...$parameters);
+            return $column->string($key, ...$parameters);
             return true;
         }
     
