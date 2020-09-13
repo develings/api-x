@@ -101,7 +101,8 @@ class Migrator
             'first', 'storedAs', 'unsigned', 'useCurrent', 'virtualAs',
             'generatedAs', 'always', 'spatialIndex', 'index', 'persisted', 'primary',
             'type',
-            //'unique', 'default', 'nullable'
+            'nullable',
+            //'unique', 'default'
         ];
         
         foreach ($parts as $part) {
@@ -118,7 +119,7 @@ class Migrator
             dump($field->key . ' - '. $method);
             if (in_array($method, $modifiers, true)) {
                 try {
-                    $column->$method(...$parameters);
+                    $column = $column->$method(...$parameters);
                 } catch (\Throwable $e) {
                     dd($e, $field);
                 }
@@ -132,7 +133,7 @@ class Migrator
                     // custom method does not exist in php api
                     $this->error('Method does not exist: ' . $method);
                 }
-                //$column = $passed;
+                $column = $passed;
                 
                 continue;
             }
