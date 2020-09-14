@@ -67,8 +67,22 @@ trait RuleTrait
     public function cast($value)
     {
         $cast = $this->rules['cast'] ?? null;
-        if ($value && $cast && $cast->parameters[0] === 'timestamp') {
-            $value = strtotime($value);
+        if ($value && $cast) {
+            $type = $cast->parameters[0] ?? null;
+            if ($type === 'timestamp') {
+                $value = strtotime($value);
+            } else if(strpos($type, '@') !== false) {
+                $parts = explode('@', $type);
+                //dd($parts);
+                if (count($parts) === 2) {
+                    abort_unless(class_exists($parts[0]), 500, 'Class does not exist');
+                    $class = new $parts[0]();
+                    abort_unless(method_exists($class, $parts[1]), 500, sprintf('Method does not exist (%s)', $type));
+                    
+                    $method = $parts[1];
+                    $value = $class->$method($value);
+                }
+            }
         }
         
         return $value;
