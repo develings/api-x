@@ -21,7 +21,7 @@ class API
 {
     public $definition;
     public $apis;
-    
+
     /**
      * @var Database
      */
@@ -31,16 +31,16 @@ class API
      * @var Base
      */
     public  $base;
-    
+
     private $user;
-    
+
     public function __construct(string $path)
     {
         abort_unless(file_exists($path), 500, "Path given not found");
-        
+
         $data = file_get_contents($path);
         $data = json_decode($data, 1);
-        
+
         abort_unless($data, 505, "JSON file is empty or not valid");
 
         $this->definition = $data;
@@ -50,7 +50,7 @@ class API
 
         app()->instance(self::class, $this);
     }
-    
+
     /**
      * @return self
      */
@@ -73,14 +73,14 @@ class API
 
 		//dd($data, json_last_error(), json_last_error_msg());
 	}
-	
+
 	public function migrate()
     {
         if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
             $migration = new Migrator();
             dd($migration->migrate($this->base));
         }
-        
+
         dd('mysq');
     }
 
@@ -89,7 +89,7 @@ class API
     //    $model = new Model($this->definition);
     //    $model->createModel($this->definition['api'][0]);
     //}
-    
+
     public function openApiJson()
     {
         $openAPI = new OpenAPI($this->base);
@@ -99,7 +99,7 @@ class API
 	public function setRoutes()
     {
         $prefix = $this->base->endpoint ?: '';
-    
+
         app()->routeMiddleware([
             'api.auth.member' => \API\Auth\AuthenticateMember::class,
             'api.auth' => \API\Auth\Authenticate::class,
@@ -108,7 +108,7 @@ class API
         Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
             Route::get('api.json',['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
             Route::get('migrate',['as' => 'migrate', 'uses' => '\API\Routes@migrate']); //
-            
+
             Route::get('{api}', ['as' => 'index', 'uses' => '\API\Routes@index']);
             Route::post('{api}', ['as' => 'post', 'uses' => '\API\Routes@post']);
             Route::get('{api}/{id}', ['as' => 'get', 'uses' => '\API\Routes@get']);
@@ -140,11 +140,11 @@ class API
                 //$query->orWhereNull('deleted_at');
             });
         }
-        
+
         $query = $this->getWhereParameters($query, $api);
-        
+
         $search = $request->get('search');
-        if ($search) {
+        if ($search && $api->searchable) {
             $fields = explode(',', $api->searchable ?: '');
             $fields = $fields ? array_values($fields) : array_keys($api->fields);
 
@@ -155,41 +155,41 @@ class API
                 $i++;
             }
         }
-    
+
         if ($offset) {
             //$query->afterKey(['uuid' => $offset, 'created_at' => '2020-08-17 13:50:19']);
             //dd($query->toDynamoDbQuery(), $query->get());
         }
-        
-        
+
+
         if ($this->base->db === \API\Definition\DB::DRIVER_DYNAMO_DB) {
             $data = $query->paginate($perPage, $total = $query->count(), $api);
         } else {
             $data = $query->paginate($perPage);
         }
-        
+
         $items = $api->dataHydrateItems($data->items(), $request);
         $items = $api->addRelations($items->toArray(), $request->get('with'), true);
 
         $output = $data->toArray();
         $output['data'] = $items;
-        
+
         if (isset($total)) {
             $output['to'] = $total;
         }
 
         return $output;
     }
-    
+
     public function getWhereParameters($query, Endpoint $api)
     {
         //dd($query, $query->toDynamoDbQuery(), $query->get());
         if (!$api->condition) {
             return $query;
         }
-        
+
         //return $query;
-        
+
         //$model = $query->getModel();
         //$query->setModel($model);
         //$result = DynamoDb::table($this->base->getTableName($api))
@@ -217,21 +217,21 @@ class API
         //                  ->query();
         //
         //dd($this->base->getTableName($api), $result);
-        
-        
+
+
         $where = $api->condition;
         $where = is_array($where) ? $where : [$where];
         $userPlaceholders = $this->getUserPlaceholders();
         $userPlaceholdersKeys = array_keys($userPlaceholders);
         $userPlaceholdersValues = array_values($userPlaceholders);
-    
+
         foreach ($where as $item) {
             [$type, $condition] = explode(':', $item);
             //$userInfo = $this->user->toArray();
             //$condition = str_replace('user.uuid', $this->user->uuid, $condition);
             $condition = str_replace($userPlaceholdersKeys, $userPlaceholdersValues, $condition);
             $e = explode(',', $condition);
-            
+
             $query->$type(...$e);
         }
         //$query->decorate(function (RawDynamoDbQuery $raw) {
@@ -241,19 +241,19 @@ class API
         //});
         /** @var DynamoDbQueryBuilder $query */
         //$query->withIndex('device_user_uuid_index');
-        
-        
+
+
         //dd($query->get());
         //dd($query, $model, $query->toDynamoDbQuery(), $query->get());
-        
+
         //
-    
-        
-        
+
+
+
         return $query;
-        
+
         //$where = str_replace(':user.uuid:', ':user')
-        
+
         //return [
         //    $where,
         //    ['user.id' => $this->user->uuid]
@@ -270,13 +270,13 @@ class API
         } else {
             $model = $this->getBuilder($endpoint);
         }
-        
+
         if ($model) {
             $query = $model->where($identifierKey, $id);
         } else {
             $query = DB::table($endpoint->getTableName())->where($identifierKey, $id);
         }
-        
+
         $this->buildQuery($endpoint, $query, $source);
 
         if ( $this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL ) {
@@ -288,20 +288,20 @@ class API
             $first = $query->get()->first();
         }
         //dd($endpoint, $id, $identifierKey, $query->getQuery(), $first);
-        
+
         //dd($query->toDynamoDbQuery(), $api);
 
         if ( $first && $this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB && $endpoint->soft_deletes && $first->deleted_at ) {
             return null;
         }
-        
+
         //if (!$first) {
         //    dd($first, $id, $identifierKey, $source, $query->getQuery()->toSql());
         //}
-        
+
         return $first;
     }
-    
+
     public function getUserPlaceholders()
     {
         $replacements = [];
@@ -311,10 +311,10 @@ class API
                 $replacements['$user.' . $key] = $val;
             }
         }
-        
+
         return $replacements;
     }
-    
+
     /**
      * @param Endpoint $endpoint
      * @param Builder $builder
@@ -324,19 +324,19 @@ class API
         if (!$endpoint->find || $source === Endpoint::REQUEST_POST) {
             return;
         }
-        
+
         $find = is_array($endpoint->find) ? $endpoint->find : [$endpoint->find];
-    
+
         foreach ($find as $item) {
             $parts = explode(':', $item);
             $method = array_shift($parts);
-            
+
             // user
             $replacements = $this->getUserPlaceholders();
-            
+
             $parts = str_replace(array_keys($replacements), array_values($replacements), $parts[0]);
             $params = explode(',', $parts);
-            
+
             $builder->$method(...$params);
         }
     }
@@ -346,7 +346,7 @@ class API
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
-    
+
         return $this->findOne($api, $id, $request);
     }
 
@@ -356,7 +356,7 @@ class API
         /** @var Endpoint $endpoint */
         $endpoint = $this->getEndpoint($name);
         abort_unless($endpoint, 404);
-        
+
         //$endpoint->create->triggerAfter();
 
         // Check permission if enabled
@@ -368,14 +368,14 @@ class API
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
-    
-    
+
+
         $requestData = $request->post();
-        
+
         $data = $endpoint->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
-        
+
         //dd($data, $rules);
-        
+
         $validation = Validator::make($data, $rules);
         if ($validation->fails()) {
             $response = [
@@ -387,13 +387,13 @@ class API
         }
 
         $data = $validation->validated();
-        
+
         if ($endpoint->unique) {
             //
         }
-        
+
         //dd($data, $rules);
-        
+
         // Check if a field is unique and then perform a query in the db
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
             /** @var Field[] $fields */
@@ -407,10 +407,10 @@ class API
                 );
             });
         }
-        
+
         //$model = $this->getBuilder($api);
         $model = $this->createModelInstance($endpoint);
-        
+
         if ($model && $endpoint->unique) {
             $query = $model->newQuery();
             foreach ($endpoint->unique as $item) {
@@ -422,30 +422,30 @@ class API
             $exists = $query->first();
             abort_if($exists, 409, 'Entity exists');
         }
-        
+
         if ($model) {
             $fillables = $model->getFillable();
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
-            
+
             //dd($model, $data, $fillables);
-            
+
             $model->saveOrFail();
             $id = $model->{$endpoint->getIdentifier()};
-            
+
             if ($endpoint->create && $endpoint->create->after) {
                 $endpoint->create->triggerAfter($model);
             }
-            
+
         } else {
             $id = DB::table($endpoint->getTableName())->insertGetId(
                 $data
             );
         }
-        
+
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
-    
+
         return $this->findOne($endpoint, $id, $request, Endpoint::REQUEST_POST);
     }
 
@@ -456,14 +456,14 @@ class API
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
-    
+
         $entity = $this->find($api, $id);
         abort_unless($entity, 404);
-    
+
         // Check permission if enabled
 
         // Validate the data from within api fields
-    
+
         //$instance = $this->createModelInstance($this->getEndpoint('device_user'));
         //$foreignKey = 'id';
         //$localKey = 'device_user_id';
@@ -475,7 +475,7 @@ class API
         // go through all the columns and also validate the data
         //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
         //$rules = $api->fields;
-        
+
         $validation = Validator::make($request->post(), $rules);
         if ($validation->fails()) {
             $response = [
@@ -487,13 +487,13 @@ class API
         }
 
         $data = $validation->validated();
-        
+
         //dd($data, $rules);
         abort_unless($data, 400, 'No data set');
 
         $model = $this->createModelInstance($api);
-        
-        
+
+
         if (method_exists($entity, 'toArray')) {
             $entityData = $entity->toArray();
         } else {
@@ -502,10 +502,10 @@ class API
         //$data = array_merge($entityData, $data);
         // compare and only fill data that is empty
         $data = $api->fillDefaultValues($data, $entityData, Endpoint::REQUEST_PUT);
-        
+
         // Unset values that should be unchangeable like ID
         //unset($data[$api->getIdentifier()]);
-        
+
         if ($api->timestamps) {
             $data['updated_at'] = date('Y-m-d H:i:s');
         }
@@ -523,7 +523,7 @@ class API
                 ->where($api->getIdentifier(), $id)
                 ->update($data);
         }
-    
+
         return $this->findOne($api, $id, $request);
     }
 
@@ -532,10 +532,10 @@ class API
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
-    
+
         $entity = $this->find($api, $id);
         abort_unless($entity, 404);
-    
+
         // Distinguish between model and normal db
 
         //$model = $api->createModelInstance();
@@ -593,12 +593,12 @@ class API
     {
         return $this->base->api;
     }
-    
+
     public function getUser()
     {
         return $this->user;
     }
-    
+
     private function dataHydrate(Endpoint $api, $data)
     {
         $hasSoftDeletes = $api->soft_deletes ?? false;
@@ -636,11 +636,11 @@ class API
 
         return $items;
     }
-    
+
     public function getBuilder(Endpoint $endpoint)
     {
         $tableName = $this->base->getTableName($endpoint);
-        
+
         if ($this->base->db->driver === 'dynamoDB') {
             $model = DynamoModel::createInstance($tableName);
             $endpoint->setDynamoIndexes($model);
@@ -648,14 +648,14 @@ class API
         } else {
             $model = DB::table($tableName);
         }
-        
+
         return $model;
     }
-    
+
     public function createModelInstance(Endpoint $endpoint)
     {
         $tableName = $this->base->getTableName($endpoint);
-    
+
         if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
             $model = DynamoModel::createInstance($tableName);
             $model->setKeyName($endpoint->getIdentifier());
@@ -665,10 +665,10 @@ class API
             $model->fillable($endpoint->getFieldNames());
             //$model->timestamps = false;
         }
-    
+
         return $model;
     }
-    
+
     /**
      * @param Endpoint $api
      * @param $id
@@ -680,26 +680,26 @@ class API
     {
         $entity = $this->find($api, $id, null, $source);
         abort_unless($entity, 404);
-    
+
         $data = $entity;
         if ($data instanceof Model) {
             $data = $data->toArray();
         }
-    
+
         if (is_object($data)) {
             $data = (array) $data;
         }
-    
+
         //$data = $api->dataHydrate($entity);
-    
+
         $data = $api->dataHydrate($data, $request);
-        
+
         return $api->addRelations($data, $request->get('with'));
         //$data = $api->dataHydrate($entity);
         //
         //return $api->addRelations($data, $request->get('with'));
     }
-    
+
     /**
      * @param $name
      * @param $id
@@ -711,13 +711,13 @@ class API
         /** @var Endpoint $api */
         $api = $this->getEndpoint($name);
         abort_unless($api, 404);
-        
+
         $entity = $this->find($api, $id);
         abort_unless($entity, 404);
-        
+
         return $entity;
     }
-    
+
     public function setUser($user)
     {
         $this->user = $user;
