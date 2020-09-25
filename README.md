@@ -8,6 +8,18 @@ EG: Give me all of the OrderIds for a particular Username;
 
 ### TODO
 - [ ] Pagination
+- [ ] Search
+- [ ] 
+
+#### Search
+Search should be easy
+
+```json
+{ "name": "string|search:like" },
+{ "description": "string|search:like_left" },
+{ "description": "string|search:like_right" },
+{ "uuid": "string|search:equal" },
+```
 
 #### Simple example
 ```json
