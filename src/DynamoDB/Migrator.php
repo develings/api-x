@@ -39,7 +39,7 @@ class Migrator
         foreach ($base->api as $api) {
             $definition = new Table($base->getTableName($api));
             $field = $api->getField($api->getIdentifier());
-            abort_unless($field, 500, 'Field is missing for API endpoint');
+            abort_unless($field, 501, 'Field is missing for API endpoint');
             
             $definition->addKey($field->key, Table::KEY_TYPE_HASH);
             

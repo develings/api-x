@@ -89,7 +89,7 @@ class Relation
             /** @var Endpoint $relation */
             $relation = $apiClass->getEndpoint($rule->target);
 
-            abort_unless($relation, 500, 'Relation not found');
+            abort_unless($relation, 501, 'Relation not found');
 
             //$collectionKeyed = $collection->keyBy($rule->type === 'belongsTo' ? $rule->owner_key : $rule->foreign_key);
             $collectionKeyed = $collection->keyBy($rule->foreign_key);

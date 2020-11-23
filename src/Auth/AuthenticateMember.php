@@ -7,6 +7,7 @@ use API\Definition\Endpoint;
 use API\Definition\EndpointPath;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Str;
 
 class AuthenticateMember
@@ -17,9 +18,17 @@ class AuthenticateMember
         $api = app()->get(API::class);
         
         $route = $request->route();
-        $routeParameters = $route[2] ?? null;
+        if ($route instanceof Route) {
+            $routeParameters = $route->parameters();
+            $routeName = $route->getAction('as');
+        } else {
+            $routeParameters = $route[2] ?? null;
+            $routeName = $route[1]['as'] ?? null;
+        }
+    
+        $routeName = str_replace('..', '.', $routeName);
+        
         $endpointName = $routeParameters['api'] ?? null;
-        $routeName = $route[1]['as'] ?? null;
         
         $default = $api->base->authentication ?: [];
         if (!is_array($default)) {
@@ -71,10 +80,10 @@ class AuthenticateMember
                 break; // not allowed for anyone
             }
             
-            abort_unless($method, 500, 'Authentication method missing');
+            abort_unless($method, 501, 'Authentication method missing');
 
             $className = '\API\\Auth\\' . ucfirst($method);
-            abort_unless(class_exists($className), 500, 'Authentication class does not exist');
+            abort_unless(class_exists($className), 501, 'Authentication class does not exist');
             $parameters = explode(',', $expression[1] ?? '');
 
             $class = new $className(...$parameters);

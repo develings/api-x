@@ -1,0 +1,35 @@
+{
+    "name": "API",
+    "version": "1.0",
+    "description": "-",
+    "endpoint": "/api/v1.0/",
+    "authentication": "token:device,api_key",
+    "authentication_guest": "guest",
+    "events": true,
+    "hash_salt": "env:APP_HASH_SALT",
+    "key": "env:APP_KEY",
+    "db": {
+        "driver": "mysql",
+        "prefix": "api_"
+    },
+    "servers": [
+        { "url": "http://localhost" },
+        { "url": "https://example.com" }
+    ],
+    "api": [
+        {
+            "name": "user",
+            "timestamps": true,
+            "soft_deletes": true,
+            "fields": {
+                "id": "id",
+                "email": "email|unique|nullable",
+                "password": "password|nullable|hash",
+                "last_active_at": "datetime|nullable",
+            },
+            "relations": {
+
+            },
+        }
+    ]
+}

@@ -29,7 +29,7 @@ class Token
         /** @var API $api */
         $api = app()->get(API::class);
         $endpoint = $api->getEndpoint($this->db_name);
-        abort_unless($endpoint, 500, sprintf('Endpoint (%s) not found', $this->db_name));
+        abort_unless($endpoint, 501, sprintf('Endpoint (%s) not found', $this->db_name));
         
         $token = $request->get($this->request_key);
         if (!$token) {

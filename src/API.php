@@ -33,15 +33,26 @@ class API
     public  $base;
 
     private $user;
+    
+    /**
+     * Can be invalid if running in CLI and the JSON file does not exist
+     * @var bool
+     */
+    private $valid = true;
 
     public function __construct(string $path)
     {
-        abort_unless(file_exists($path), 500, "Path given not found");
+        $app = app();
+        if ($app->runningInConsole()) {
+            return $this->valid = false;
+        }
+        
+        abort_unless(file_exists($path), 501, "API json file not found ($path)");
 
         $data = file_get_contents($path);
         $data = json_decode($data, 1);
 
-        abort_unless($data, 505, "JSON file is empty or not valid");
+        abort_unless($data, 505, "API JSON file ($path) is invalid: " . json_last_error_msg());
 
         $this->definition = $data;
 
@@ -98,22 +109,23 @@ class API
 
 	public function setRoutes()
     {
+        if (!$this->valid) {
+            return;
+        }
+        
         $prefix = $this->base->endpoint ?: '';
-
-        app()->routeMiddleware([
-            'api.auth.member' => \API\Auth\AuthenticateMember::class,
-            'api.auth' => \API\Auth\Authenticate::class,
-        ]);
-
+        
+        Route::group(['prefix' => $prefix], static function() {
+            Route::get('api.json', ['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
+        });
+        
         Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
-            Route::get('api.json',['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
-            Route::get('migrate',['as' => 'migrate', 'uses' => '\API\Routes@migrate']); //
-
-            Route::get('{api}', ['as' => 'index', 'uses' => '\API\Routes@index']);
-            Route::post('{api}', ['as' => 'post', 'uses' => '\API\Routes@post']);
-            Route::get('{api}/{id}', ['as' => 'get', 'uses' => '\API\Routes@get']);
-            Route::put('{api}/{id}', ['as' => 'put', 'uses' => '\API\Routes@put']);
-            Route::delete('{api}/{id}', ['as' => 'delete', 'uses' => '\API\Routes@delete']);
+            Route::get('migrate', ['as' => '.migrate', 'uses' => '\API\Routes@migrate']); //
+            Route::get('{api}', ['as' => '.index', 'uses' => '\API\Routes@index']);
+            Route::post('{api}', ['as' => '.post', 'uses' => '\API\Routes@post']);
+            Route::get('{api}/{id}', ['as' => '.get', 'uses' => '\API\Routes@get']);
+            Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\API\Routes@put']);
+            Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\API\Routes@delete']);
         });
     }
 
