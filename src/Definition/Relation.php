@@ -61,7 +61,14 @@ class Relation
     {
         return $this->rules[$this->relationType] ?? null;
     }
-
+    
+    /**
+     * @param Endpoint $api
+     * @param $data
+     * @param false $multiple
+     *
+     * @return array|null
+     */
     public function getData($api, $data, $multiple = false)
     {
         // differentiate between an array of data or one item of data
@@ -92,10 +99,7 @@ class Relation
 
             abort_unless($relation, 501, 'Relation not found');
             
-            if ($rule->type === 'hasMany') {
-                $rule->owner_key = 'user_id';
-                $rule->foreign_key = 'id';
-            }
+            $rule->setRelationKeyDefaults($api->name);
 
             //$collectionKeyed = $collection->keyBy($rule->type === 'belongsTo' ? $rule->owner_key : $rule->foreign_key);
             $collectionKeyed = $collection->keyBy($rule->foreign_key);

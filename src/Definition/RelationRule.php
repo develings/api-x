@@ -38,10 +38,32 @@ class RelationRule
         }
 
         $this->parameters = $parameters;
+        
+        $foreignKey = $this->name . '_id';
+        $ownerKey = 'id';
+    
+        //if ($this->type === 'hasMany') {
+        //    $ownerKey = $foreignKey;
+        //    $foreignKey = $ownerKey;
+        //}
 
         $this->target = $parameters[0] ?? null;
-        $this->foreign_key = $parameters[1] ?? $this->name .  '_id';
-        $this->owner_key = $parameters[2] ?? 'id';
+        $this->foreign_key = $parameters[1] ?? $foreignKey;
+        $this->owner_key = $parameters[2] ?? $ownerKey;
+    }
+    
+    public function setRelationKeyDefaults($origin)
+    {
+        $foreignKey = $this->name . '_id';
+        $ownerKey = 'id';
+    
+        if ($this->type === 'hasMany') {
+            $foreignKey = 'id';
+            $ownerKey = "{$origin}_id";
+        }
+    
+        $this->foreign_key = $this->parameters[1] ?? $foreignKey;
+        $this->owner_key = $this->parameters[2] ?? $ownerKey;
     }
 
     public function getDefault()
