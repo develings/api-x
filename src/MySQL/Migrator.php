@@ -83,47 +83,49 @@ class Migrator
     public function parseColumnDefinition(Field $field, Blueprint $blueprint, $key)
     {
         $definitions = explode('|', $field->definition);
-        $column = null;
         $definitionType = array_shift($definitions);
         
-        $specialModifiers = ['email', 'password'];
+        [$name, $parameters] = $this->parseDefinition($definitionType);
     
-        $options = explode(':', $definitionType);
-        $name = $options[0];
-        $parameters = $options[1] ?? null;
-    
-        $parameters = $parameters ? explode(',', $parameters) : [];
-    
-        if (in_array($name, $specialModifiers)) {
-            $column = $this->methods($blueprint, $field->key, $name, $parameters);
-        } else {
-            $column = $blueprint->$name($field->key, ...$parameters);
-        }
+        $column = $this->createColumn($blueprint, $field->key, $name, $parameters);
         
         foreach ($definitions as $definition) {
-            $options = explode(':', $definition);
-            $name = $options[0];
-            $parameters = $options[1] ?? null;
+            [$name, $parameters] = $this->parseDefinition($definition);
             
-            $parameters = $parameters ? explode(',', $parameters) : [];
-            
-            $column->$name($field->key, ...$parameters);
+            $column->$name(...$parameters);
         }
     }
     
-    public function methods($column, $key, $method, $parameters = null)
+    public function parseDefinition($definition): array
+    {
+        $options = explode(':', $definition);
+        $name = array_shift($options);
+        $parameters = $options[0] ?? null;
+    
+        $parameters = $parameters ? explode(',', $parameters) : [];
+        
+        return [$name, $parameters];
+    }
+    
+    /**
+     * @param Blueprint $blueprint
+     * @param $key
+     * @param $method
+     * @param null $parameters
+     *
+     * @return bool
+     */
+    public function createColumn($blueprint, $key, $method, $parameters = null)
     {
         if ($method === 'password') {
-            return $column->string($key, ...$parameters);
-            return true;
+            return $blueprint->string($key, ...$parameters);
         }
     
         if ($method === 'email') {
-            return $column->string($key, ...$parameters);
-            return true;
+            return $blueprint->string($key, ...$parameters);
         }
     
-        return false;
+        return $blueprint->$method($key, ...$parameters);
     }
     
     /**

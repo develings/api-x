@@ -65,8 +65,6 @@ class AuthenticateMember
             //
         }
         
-        //dump($auths, $request);
-        
         foreach ($auths as $authOne) {
             $auth = $authOne;
             $inherit = true;
@@ -75,6 +73,7 @@ class AuthenticateMember
                 $inherit = $authOne['inherit'] ?? true;
             }
             $expression = explode(':', $auth);
+            
             $method = $expression[0] ?? null;
             if ($method === 'none') {
                 break; // not allowed for anyone
