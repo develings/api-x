@@ -481,6 +481,9 @@ class Endpoint
             $data[ $key ] = Str::random($parameters[1] ?? 12);
         } else if( $parameterMethod === 'uuid' ) {
             $data[ $key ] = Str::uuid()->toString();
+        // } else if( $parameterMethod === 'hashid' ) {
+        //     $hashId = new \Hashids\Hashids();
+        //     $data[ $key ] = $hashId->encode($id);
         } else if( $userPlaceholderKeys && in_array($parameterMethod, $userPlaceholderKeys, true) ) {
             $data[ $key ] = $userPlaceholders[ $parameterMethod ];
         } else {

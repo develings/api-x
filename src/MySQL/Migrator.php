@@ -19,18 +19,6 @@ class Migrator
     
     public function migrate(array $tables, $force = false)
     {
-        // Schema::dropIfExists('users');
-        
-        // Schema::create('users', function (Blueprint $table) {
-        //           $table->id();
-        //           $table->string('name');
-        //           $table->string('email')->unique();
-        //           $table->timestamp('email_verified_at')->nullable();
-        //           $table->string('password');
-        //           $table->rememberToken();
-        //           $table->timestamps();
-        //       });
-        
         $data = $this->api->base;
         
         foreach ($data->api as $table) {
@@ -94,54 +82,33 @@ class Migrator
      */
     public function parseColumnDefinition(Field $field, Blueprint $blueprint, $key)
     {
-        $parts = explode('|', $field->definition);
+        $definitions = explode('|', $field->definition);
         $column = null;
-        $modifiers = [
-            'after', 'autoIncrement', 'charset', 'collation', 'comment',
-            'first', 'storedAs', 'unsigned', 'useCurrent', 'virtualAs',
-            'generatedAs', 'always', 'spatialIndex', 'index', 'persisted', 'primary',
-            'type',
-            'nullable',
-            //'unique', 'default'
-        ];
+        $definitionType = array_shift($definitions);
         
-        foreach ($parts as $part) {
-            $parameters = explode(':', $part);
-            $method = array_shift($parameters);
-            
-            //dump($key . '-'. $field, $parameters);
-            $column = $column ?: $blueprint;
-            if( $parameters ) {
-                $parameters = explode(',', $parameters[0]);
-            }
-            
-            // handle special modifiers such as unsigned, index
-            dump($field->key . ' - '. $method);
-            if (in_array($method, $modifiers, true)) {
-                try {
-                    $column = $column->$method(...$parameters);
-                } catch (\Throwable $e) {
-                    dd($e, $field);
-                }
-                continue;
-            }
-            
-            if( !method_exists($column, $method)  ) {
-                // method does not exist in laravel
-                $passed = $this->methods($column, $key, $method, $parameters);
-                if (!$passed) {
-                    // custom method does not exist in php api
-                    $this->error('Method does not exist: ' . $method);
-                }
-                $column = $passed;
-                
-                continue;
-            }
-            
-            $column = $column->$method($key, ...$parameters);
+        $specialModifiers = ['email', 'password'];
+    
+        $options = explode(':', $definitionType);
+        $name = $options[0];
+        $parameters = $options[1] ?? null;
+    
+        $parameters = $parameters ? explode(',', $parameters) : [];
+    
+        if (in_array($name, $specialModifiers)) {
+            $column = $this->methods($blueprint, $field->key, $name, $parameters);
+        } else {
+            $column = $blueprint->$name($field->key, ...$parameters);
         }
         
-        return $blueprint;
+        foreach ($definitions as $definition) {
+            $options = explode(':', $definition);
+            $name = $options[0];
+            $parameters = $options[1] ?? null;
+            
+            $parameters = $parameters ? explode(',', $parameters) : [];
+            
+            $column->$name($field->key, ...$parameters);
+        }
     }
     
     public function methods($column, $key, $method, $parameters = null)
@@ -177,6 +144,7 @@ class Migrator
         foreach ($relations as $relationName => $relation) {
             $parts = explode('|', $relation->definition);
             $column = null;
+            
             foreach ($parts as $part) {
                 $parameters = explode(':', $part);
                 $method = array_shift($parameters);
@@ -197,21 +165,22 @@ class Migrator
                 }
                 
                 //if( $method === 'belongsTo' || $method === 'hasOne' ) {
-                    $fieldName = $parameters[1] ?? $relationName . '_id';
-                    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
-                    if( !$relationEndpoint ) {
-                        $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
-                        continue;
-                    }
-                    $relationTableName = $this->api->base->getTableName($relationEndpoint);
-                    $field = $column->foreignId($fieldName);
-                    if ($relation->isNullable()) {
-                        $field = $field->nullable();
-                    }
-                    if ($relation->isUnique()) {
-                        $field = $field->unique();
-                    }
-                    $field->constrained($relationTableName);
+                $fieldName = $parameters[1] ?? $relationName . '_id';
+                $relationEndpoint = $this->api->getEndpoint($parameters[0]);
+                if( !$relationEndpoint ) {
+                    $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
+                    continue;
+                }
+                
+                $relationTableName = $this->api->base->getTableName($relationEndpoint);
+                $field = $column->foreignId($fieldName);
+                if ($relation->isNullable()) {
+                    $field = $field->nullable();
+                }
+                if ($relation->isUnique()) {
+                    $field = $field->unique();
+                }
+                $field->constrained($relationTableName);
                 //}
     
                 //if( $method === 'hasOne' ) {

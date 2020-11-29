@@ -24,7 +24,7 @@ class MakeApiCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'api:make-api {--name=} {--force}';
+    protected $signature = 'api:make {--name=} {--force}';
     
     /**
      * The console command description.

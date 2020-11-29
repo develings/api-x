@@ -16,7 +16,7 @@ class Token
      */
     private $request_key;
     
-    public function __construct($db_name = 'users', $key = 'api_key', $requestKey = 'api_key')
+    public function __construct($db_name = 'user', $key = 'api_key', $requestKey = 'api_key')
     {
         $this->db_name = $db_name;
         $this->key = $key;
@@ -29,6 +29,7 @@ class Token
         /** @var API $api */
         $api = app()->get(API::class);
         $endpoint = $api->getEndpoint($this->db_name);
+        
         abort_unless($endpoint, 501, sprintf('Endpoint (%s) not found', $this->db_name));
         
         $token = $request->get($this->request_key);

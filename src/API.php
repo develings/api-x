@@ -43,9 +43,11 @@ class API
     public function __construct(string $path)
     {
         $app = app();
-        if ($app->runningInConsole()) {
-            return $this->valid = false;
-        }
+        $app->instance(self::class, $this);
+        
+        //if ($app->runningInConsole()) {
+        //    return $this->valid = false;
+        //}
         
         abort_unless(file_exists($path), 501, "API json file not found ($path)");
 
@@ -58,8 +60,6 @@ class API
 
         $this->db = new Database($data);
         $this->base = new Base($data);
-
-        app()->instance(self::class, $this);
     }
 
     /**

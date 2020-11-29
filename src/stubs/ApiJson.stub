@@ -3,7 +3,7 @@
     "version": "1.0",
     "description": "-",
     "endpoint": "/api/v1.0/",
-    "authentication": "token:device,api_key",
+    "authentication": "token:user,api_key",
     "authentication_guest": "guest",
     "events": true,
     "hash_salt": "env:APP_HASH_SALT",
