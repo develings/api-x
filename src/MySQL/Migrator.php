@@ -5,6 +5,7 @@ namespace API\MySQL;
 use API\API;
 use API\Definition\Field;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\Schema;
 
 class Migrator
@@ -92,8 +93,24 @@ class Migrator
         foreach ($definitions as $definition) {
             [$name, $parameters] = $this->parseDefinition($definition);
             
-            $column->$name(...$parameters);
+            $this->setOption($column, $name, $parameters);
         }
+    }
+    
+    /**
+     * @param ColumnDefinition $column
+     * @param string $name
+     * @param array $parameters
+     */
+    public function setOption($column, $name, $parameters)
+    {
+        $firstParameter = $parameters[0] ?? null;
+        $ignore = ['alphanumeric', 'uuid', 'hashid'];
+        if ($name === 'default' && in_array($firstParameter, $ignore)) {
+            return;
+        }
+        
+        $column->$name(...$parameters);
     }
     
     public function parseDefinition($definition): array
