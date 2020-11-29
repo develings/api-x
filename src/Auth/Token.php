@@ -37,7 +37,7 @@ class Token
             return false;
         }
         
-        $user = $api->find($endpoint, $token, $this->key);
+        $user = $api->find($endpoint, $token, $this->key, 'auth');
         //dd($user);
         //abort_unless($user, 403, 'Unauthorized');
         if (!$user) {

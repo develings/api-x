@@ -13,8 +13,12 @@ class Base
     public $endpoint;
 
     public $db_prefix;
-
-    public $authentication;
+    
+    /**
+     * Possible values: token|guest|bearer
+     * @var string
+     */
+    public $authentication = 'token:user:api_key';
 
     public $events;
 
@@ -33,6 +37,10 @@ class Base
     public $db;
 
     public $servers;
+    
+    public $hash_salt = 'env:APP_HASH_SALT';
+    
+    public $key = 'env:APP_KEY';
 
     public function __construct(array $data)
     {

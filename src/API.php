@@ -288,7 +288,10 @@ class API
         } else {
             $query = DB::table($endpoint->getTableName())->where($identifierKey, $id);
         }
-
+    
+        if ($source !== 'auth') {
+            $query = $this->getWhereParameters($query, $endpoint);
+        }
         $this->buildQuery($endpoint, $query, $source);
 
         if ( $this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL ) {
@@ -299,7 +302,9 @@ class API
         } else {
             $first = $query->get()->first();
         }
-        //dd($endpoint, $id, $identifierKey, $query->getQuery(), $first);
+        
+        // find out if fetching user of entity
+        //dd($endpoint, $id, $identifierKey, $query->getQuery()->toSql(), $first);
 
         //dd($query->toDynamoDbQuery(), $api);
 

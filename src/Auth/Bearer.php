@@ -29,7 +29,7 @@ class Bearer
             return false;
         }
         
-        $user = $api->find($endpoint, $token, $this->key);
+        $user = $api->find($endpoint, $token, $this->key, 'auth');
         if (!$user) {
             return false;
         }
