@@ -7,7 +7,7 @@ use API\API;
 trait RuleTrait
 {
     public $rules = [];
-    
+
     /**
      * @return Rule[]
      */
@@ -15,7 +15,7 @@ trait RuleTrait
     {
         return $this->rules;
     }
-    
+
     /**
      * @return Rule|null
      */
@@ -23,27 +23,27 @@ trait RuleTrait
     {
         return $this->rules['default'] ?? null;
     }
-    
+
     public function isHidden(): bool
     {
         return (bool)($this->rules['hidden'] ?? false);
     }
-    
+
     public function has(string $name): bool
     {
         return (bool)($this->rules[$name] ?? false);
     }
-    
+
     public function isNullable(): bool
     {
         return $this->has('nullable');
     }
-    
+
     public function isUnique(): bool
     {
         return $this->has('unique');
     }
-    
+
     public function getValidationRules(Endpoint $endpoint, array $validators = null)
     {
         $rules = [];
@@ -51,20 +51,20 @@ trait RuleTrait
             if (!in_array($name, $validators, true)) {
                 continue;
             }
-            
+
             if ($name === 'unique') {
                 $api = \API\API::getInstance();
                 $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
                 continue;
             }
-            
+
             $rules[] = $name;
         }
-        
+
         return $rules;
     }
-    
-    public function cast($value)
+
+    public function cast($value, $data)
     {
         $cast = $this->rules['cast'] ?? null;
         if ($value && $cast) {
@@ -73,18 +73,18 @@ trait RuleTrait
                 $value = strtotime($value);
             } else if(strpos($type, '@') !== false) {
                 $parts = explode('@', $type);
-                //dd($parts);
+
                 if (count($parts) === 2) {
                     abort_unless(class_exists($parts[0]), 500, 'Class does not exist');
                     $class = new $parts[0]();
                     abort_unless(method_exists($class, $parts[1]), 500, sprintf('Method does not exist (%s)', $type));
-                    
+
                     $method = $parts[1];
-                    $value = $class->$method($value);
+                    $value = $class->$method($value, $data);
                 }
             }
         }
-        
+
         return $value;
     }
 }

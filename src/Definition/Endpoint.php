@@ -16,12 +16,12 @@ class Endpoint
 {
     public const REQUEST_POST = 'post';
     public const REQUEST_PUT = 'put';
-    
+
     /**
      * @var array
      */
     public $definition;
-    
+
     public $name;
 
     public $model;
@@ -31,7 +31,7 @@ class Endpoint
     public $timestamps;
 
     public $soft_deletes;
-    
+
     public $unique;
 
     public $authentication;
@@ -61,7 +61,7 @@ class Endpoint
     public $fields_hidden;
 
     public $fields_cast;
-    
+
     /**
      * @var EndpointPath
      */
@@ -70,39 +70,39 @@ class Endpoint
     public $update;
 
     private $api;
-    
+
     public $sort_key;
-    
+
     public $secondary_identifier;
     public $secondary_sort_key;
-    
+
     /**
      * @var EndpointPath
      */
     public $index;
-    
+
     public $condition;
-    
+
     public $indexes;
-    
+
     public $find;
-    
+
     public function __construct(array $data)
     {
         $paths = ['index', 'create', 'update', 'delete', 'get'];
         $this->definition = $data;
-        
+
         foreach ($data as $key => $value) {
             if (!property_exists($this, $key)) {
                 continue;
             }
-            
+
             if ($key === 'fields') {
                 foreach ($value as $field => $v) {
                     $value[$field] = new Field($field, $v);
                 }
             }
-            
+
             if (in_array($key, $paths, true)) {
                 $value = new EndpointPath($value);
             }
@@ -112,10 +112,10 @@ class Endpoint
                     $value[$field] = new Relation($field, $v);
                 }
             }
-            
+
             $this->$key = $value;
         }
-        
+
     }
 
     public function getValidationRules($request = self::REQUEST_POST)
@@ -129,29 +129,29 @@ class Endpoint
             }
             $validators[] = Str::replaceFirst('validate_', '', Str::snake($validationMethod));
         }
-        
+
         $api = API::getInstance();
-        
+
         if ($api->base->db->driver === DB::DRIVER_DYNAMO_DB) {
             $validators = array_values(array_diff($validators, ([
                 'unique', 'exists', 'get_query_column', 'guess_column_for_query'
             ])));
         }
-        
+
         $fields = $this->fields;
-        
+
         $definitions = [];
         foreach ($fields as $key => $field) {
             $rules = $field->getRules();
             $def = '';
-            
+
             //if ($key === 'country') {
             //    //dd($rules);
             //}
 
             foreach ($rules as $rule) {
                 $name = $rule->name;
-                
+
                 if ($name === 'tinyInteger') {
                     //dd($name);
                     $name = 'number';
@@ -165,21 +165,21 @@ class Endpoint
                 if ($rule->name === 'unique' && !$rule->parameters) {
                     $path = 'unique:' . $api->base->getTableName($this);
                 }
-                
+
                 if ($rule->name === 'create_ignore' && $request === self::REQUEST_POST) {
                     continue;
                 }
 
                 $def .= ($def ? '|' : '') . $path;
             }
-            
+
             if (!$def) {
                 //continue;
             }
 
             $definitions[$key] = $def;
         }
-        
+
         if ($this->relations) {
             foreach ($this->relations as $relation) {
                 $relationInfo = $relation->getInfo();
@@ -194,20 +194,20 @@ class Endpoint
 
         dd($rules, $this->fields);
     }
-    
+
     public function getFieldNames()
     {
         $fields = array_keys($this->fields);
-        
+
         if ($this->timestamps) {
             $fields[] = 'created_at';
             $fields[] = 'updated_at';
         }
-        
+
         if ($this->soft_deletes) {
             $fields[] = 'deleted_at';
         }
-        
+
         if ($this->relations) {
             foreach ($this->relations as $relation) {
                 $relationInfo = $relation->getInfo();
@@ -217,7 +217,7 @@ class Endpoint
                 $fields[] = $relationInfo['foreign_key'];
             }
         }
-        
+
         return $fields;
     }
 
@@ -225,7 +225,7 @@ class Endpoint
     {
         $api = API::getInstance();
         $prefix = $api->base->db->prefix;
-        
+
         $table = $this->db ?: $this->name;
         if ($this->model) {
             /** @var Model $class */
@@ -257,11 +257,11 @@ class Endpoint
             $data['created_at'] = date('Y-m-d H:i:s');
             $data['updated_at'] = $isDynamoDb ? '' : null;
         }
-    
+
         if ($this->soft_deletes && $request === self::REQUEST_POST) {
             $data['deleted_at'] = $isDynamoDb ? '' : null;
         }
-        
+
         $userPlaceholders = $api->getUserPlaceholders();
         $userPlaceholderKeys = $userPlaceholders ? array_keys($userPlaceholders) : [];
 
@@ -279,21 +279,21 @@ class Endpoint
             if ($request === self::REQUEST_PUT && isset($originalData[$key])) {
                 continue;
             }
-    
-    
+
+
             $data = $this->setDefaultValue($field, $data, $key, $userPlaceholderKeys, $userPlaceholders);
         }
-        
+
         if ($this->relations) {
             foreach ($this->relations as $key => $relation) {
                 if ($relation->relationType !== 'hasOne' && $relation->relationType !== 'belongsTo') {
                     continue;
                 }
-                
+
                 $data = $this->setDefaultValue($relation, $data, $relation->getInfo()['foreign_key'], $userPlaceholderKeys, $userPlaceholders);
             }
         }
-        
+
         return $data;
     }
 
@@ -311,11 +311,11 @@ class Endpoint
         if (is_object($data)) {
             $data = (array) $data;
         }
-        
+
         if ($this->soft_deletes && $data && array_key_exists('deleted_at', $data)) {
             unset($data['deleted_at']);
         }
-        
+
         $selectedFields = [];
         if ($request && ($sentFields = $request->get('fields'))) {
             $selectedFields = explode(',', $sentFields);
@@ -331,26 +331,26 @@ class Endpoint
             if ($field->isHidden()) {
                 continue;
             }
-            
+
             if ($selectedFields && !in_array($field->key, $selectedFields, true)) {
                 continue;
             }
 
-            $output[$field->key] = $field->cast($data[$field->key]);
+            $output[$field->key] = $field->cast($data[$field->key], $data);
         }
-        
+
         if ($this->relations) {
             foreach ($this->relations as $relation) {
                 $key = $relation->getRelationRule()->foreign_key;
                 if (!isset($data[$key])) {
                     continue;
                 }
-    
+
                 if ($relation->isHidden()) {
                     continue;
                 }
-    
-                $output[$key] = $relation->cast($data[$key]);
+
+                $output[$key] = $relation->cast($data[$key], $data);
             }
         }
 
@@ -362,7 +362,7 @@ class Endpoint
                 $output['updated_at'] = $output['updated_at'] ?? $data['updated_at'] ?? null;
             }
         }
-        
+
         //dd($data, $output, $this->relations);
 
         return $output;
@@ -385,7 +385,7 @@ class Endpoint
 
         /** @var Relation[] $relationsAll */
         $relationsAll = collect($this->relations)->keyBy('key');
-        
+
         foreach ($relations as $relation) {
             $relation = explode(':', $relation);
             $name = array_shift($relation);
@@ -414,39 +414,39 @@ class Endpoint
     {
         return $this->relations ? array_keys($this->relations) : null;
     }
-    
+
     public function getField(string $name)
     {
         return $this->fields[$name];
     }
-    
+
     public function setDynamoIndexes(DynamoModel $model)
     {
         $model->setKeyName($this->getIdentifier());
         if (!$this->indexes) {
             return false;
         }
-        
+
         $indexes = [];
         foreach ($this->indexes as $index => $values) {
             $data = explode(',', $values);
             $indexes[$index] = [
                 'hash' => $data[0]
             ];
-            
+
             if (isset($data[1])) {
                 $indexes[$index]['range'] = $data[1];
             }
         }
-        
+
         $model->setDynamoDbIndexKeys($indexes);
     }
-    
+
     public function getBuilder()
     {
         $api = app()->get(API::class);
         $tableName = $api->base->getTableName($this);
-        
+
         if ($api->base->db->driver === 'dynamoDB') {
             $model = DynamoModel::createInstance($tableName);
             $this->setDynamoIndexes($model);
@@ -454,10 +454,10 @@ class Endpoint
         } else {
             $model = \Illuminate\Support\Facades\DB::table($tableName);
         }
-        
+
         return $model;
     }
-    
+
     /**
      * @param Field|Relation $field
      * @param array $data
@@ -470,23 +470,26 @@ class Endpoint
     private function setDefaultValue($field, array $data, string $key, array $userPlaceholderKeys, array $userPlaceholders): array
     {
         $default = $field->getDefault();
-        
+
         if( !$default ) {
             return $data;
         }
-        
+
         $parameters = $default->parameters;
         $parameterMethod = $parameters[0] ?? null;
         if( $parameterMethod === 'alphanumeric' ) {
             $data[ $key ] = Str::random($parameters[1] ?? 12);
         } else if( $parameterMethod === 'uuid' ) {
             $data[ $key ] = Str::uuid()->toString();
+        // } else if( $parameterMethod === 'hashid' ) {
+        //     $hashId = new \Hashids\Hashids();
+        //     $data[ $key ] = $hashId->encode($id);
         } else if( $userPlaceholderKeys && in_array($parameterMethod, $userPlaceholderKeys, true) ) {
             $data[ $key ] = $userPlaceholders[ $parameterMethod ];
         } else {
             $data[ $key ] = $parameterMethod;
         }
-        
+
         return $data;
     }
 }
