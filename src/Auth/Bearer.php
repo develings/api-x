@@ -22,14 +22,14 @@ class Bearer
         /** @var API $api */
         $api = app()->get(API::class);
         $endpoint = $api->getEndpoint($this->db_name);
-        abort_unless($endpoint, 500, sprintf('Endpoint (%s) not found', $this->db_name));
+        abort_unless($endpoint, 501, sprintf('Endpoint (%s) not found', $this->db_name));
         
         $token = $this->bearerToken($request);
         if (!$token) {
             return false;
         }
         
-        $user = $api->find($endpoint, $token, $this->key);
+        $user = $api->find($endpoint, $token, $this->key, 'auth');
         if (!$user) {
             return false;
         }

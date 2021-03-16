@@ -61,7 +61,14 @@ class Relation
     {
         return $this->rules[$this->relationType] ?? null;
     }
-
+    
+    /**
+     * @param Endpoint $api
+     * @param $data
+     * @param false $multiple
+     *
+     * @return array|null
+     */
     public function getData($api, $data, $multiple = false)
     {
         // differentiate between an array of data or one item of data
@@ -76,6 +83,7 @@ class Relation
         $apiClass = app()->get(API::class);
 
         $collection = collect($items);
+        //dd($collection);
 
         foreach ($this->rules as $methodName => $rule) {
             if (!in_array($methodName, $relationTypesAll, true)) {
@@ -89,15 +97,18 @@ class Relation
             /** @var Endpoint $relation */
             $relation = $apiClass->getEndpoint($rule->target);
 
-            abort_unless($relation, 500, 'Relation not found');
+            abort_unless($relation, 501, 'Relation not found');
+            
+            $rule->setRelationKeyDefaults($api->name);
 
             //$collectionKeyed = $collection->keyBy($rule->type === 'belongsTo' ? $rule->owner_key : $rule->foreign_key);
             $collectionKeyed = $collection->keyBy($rule->foreign_key);
+            //$collectionKeyed = $collection->keyBy($rule->type === 'hasMany' ? $rule->owner_key : $rule->foreign_key);
             $ids = $collectionKeyed->filter()->toArray();
             //dd($ids, $collectionKeyed);
 
             $result = $this->$methodName($api, $rule, $relation, $data, array_keys($ids));
-            //dd($rule, $result, $collection);
+            //dd($methodName, $rule, $result, $collection);
 
             if (!$result) {
                 continue;
@@ -233,8 +244,8 @@ class Relation
             return null;
         }
 
-        $foreignKey = $rule->parameters[1] ?? 'id';
-        $ownerKey = $rule->parameters[2] ?? 'id';
+        $foreignKey = $rule->parameters[1] ?? $rule->foreign_key;
+        $ownerKey = $rule->parameters[2] ?? $rule->owner_key;
         $builder->whereIn($ownerKey, $ids);
         //$builder->where('company_uuid', 'ddd8e28a-4ce9-45ce-b699-828b0bbfd67f');
 

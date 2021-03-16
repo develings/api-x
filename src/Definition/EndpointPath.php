@@ -33,15 +33,15 @@ class EndpointPath
         }
     
         if (strpos($expression, '@') === false) {
-            abort(500, sprintf('Method is missing in %s', $expression));
+            abort(501, sprintf('Method is missing in %s', $expression));
         }
     
         [$class, $method] = explode('@', $expression);
     
-        abort_unless(class_exists($class), 500, sprintf('Class not found (%s)', $class));
+        abort_unless(class_exists($class), 501, sprintf('Class not found (%s)', $class));
     
         $instance = app()->make($class);
-        abort_unless(method_exists($instance, $method), 500, sprintf('Class not found (%s)', $class));
+        abort_unless(method_exists($instance, $method), 501, sprintf('Class not found (%s)', $class));
     
         return $instance->$method(...$args);
     }

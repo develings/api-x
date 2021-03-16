@@ -75,10 +75,9 @@ trait RuleTrait
                 $parts = explode('@', $type);
 
                 if (count($parts) === 2) {
-                    abort_unless(class_exists($parts[0]), 500, 'Class does not exist');
+                    abort_unless(class_exists($parts[0]), 501, 'Class does not exist');
                     $class = new $parts[0]();
                     abort_unless(method_exists($class, $parts[1]), 500, sprintf('Method does not exist (%s)', $type));
-
                     $method = $parts[1];
                     $value = $class->$method($value, $data);
                 }

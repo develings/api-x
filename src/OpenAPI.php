@@ -53,7 +53,7 @@ class OpenAPI
             'tags' => []
         ];
 
-        abort_unless($this->base->api, 500, 'Invalid API json file');
+        abort_unless($this->base->api, 501, 'Invalid API json file');
         
         $data['components']['securitySchemes']['api_key'] = [
             'type' => 'apiKey',
