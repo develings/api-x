@@ -224,7 +224,11 @@ class Migrator
         }
         
         if ($table->unique) {
-            $blueprint->unique($table->unique);
+            // Convert unique to an array of associative array
+            $uniques = !isset($table->unique[0]) ? $table->unique : [$table->unique];
+            collect($uniques)->map(function($keys, $id) use($blueprint) {
+                $blueprint->unique($keys, !$id || is_numeric($id) ? null : $id);
+            });
         }
         
         return $blueprint;
