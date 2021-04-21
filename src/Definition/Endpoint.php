@@ -67,7 +67,15 @@ class Endpoint
      */
     public $create;
 
+    /**
+     * @var EndpointPath
+     */
     public $update;
+
+    /**
+     * @var EndpointPath
+     */
+    public $delete;
 
     private $api;
 
@@ -85,6 +93,9 @@ class Endpoint
 
     public $indexes;
 
+    /**
+     * @var EndpointPath
+     */
     public $find;
 
     public function __construct(array $data)

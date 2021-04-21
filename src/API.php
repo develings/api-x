@@ -33,7 +33,7 @@ class API
     public  $base;
 
     private $user;
-    
+
     /**
      * Can be invalid if running in CLI and the JSON file does not exist
      * @var bool
@@ -44,11 +44,11 @@ class API
     {
         $app = app();
         $app->instance(self::class, $this);
-        
+
         //if ($app->runningInConsole()) {
         //    return $this->valid = false;
         //}
-        
+
         abort_unless(file_exists($path), 501, "API json file not found ($path)");
 
         $data = file_get_contents($path);
@@ -112,13 +112,13 @@ class API
         if (!$this->valid) {
             return;
         }
-        
+
         $prefix = $this->base->endpoint ?: '';
-        
+
         Route::group(['prefix' => $prefix], static function() {
             Route::get('api.json', ['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
         });
-        
+
         Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
             Route::get('migrate', ['as' => '.migrate', 'uses' => '\API\Routes@migrate']); //
             Route::get('{api}', ['as' => '.index', 'uses' => '\API\Routes@index']);
@@ -288,7 +288,7 @@ class API
         } else {
             $query = DB::table($endpoint->getTableName())->where($identifierKey, $id);
         }
-    
+
         if ($source !== 'auth') {
             $query = $this->getWhereParameters($query, $endpoint);
         }
@@ -302,7 +302,7 @@ class API
         } else {
             $first = $query->get()->first();
         }
-        
+
         // find out if fetching user of entity
         //dd($endpoint, $id, $identifierKey, $query->getQuery()->toSql(), $first);
 
@@ -565,6 +565,7 @@ class API
         $method = $api->soft_deletes ? 'update' : 'delete';
 
         $data = ['deleted_at' => date('Y-m-d H:i:s')];
+        $entityArray = $entity->toArray();
 
         if ($entity) {
             //$data = array_intersect_key($data, array_flip($model->getFillable()));
@@ -584,6 +585,10 @@ class API
             } else {
                 $affected = $query->delete();
             }
+        }
+
+        if (isset($api->delete->after)) {
+            $api->delete->triggerAfter($entity, $entityArray);
         }
 
         if ($affected) {
