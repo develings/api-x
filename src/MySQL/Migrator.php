@@ -23,7 +23,6 @@ class Migrator
         $data = $this->api->base;
         
         foreach ($data->api as $table) {
-            
             if ($tables && !in_array($table->name, $tables, true) ) {
                 // Skip table because it is not selected to be migrated
                 $this->line(sprintf('<info>Skipping</info> %s', $table->name));
