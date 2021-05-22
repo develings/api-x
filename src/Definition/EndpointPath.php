@@ -12,6 +12,8 @@ class EndpointPath
 
     public $after;
 
+    public $hydrate;
+
     public function __construct(array $values = [])
     {
         foreach ($values as $k => $value) {
@@ -24,6 +26,11 @@ class EndpointPath
     public function triggerAfter()
     {
         return $this->trigger($this->after, func_get_args());
+    }
+
+    public function triggerHydrate(&$array)
+    {
+        return $this->trigger($this->hydrate, func_get_args());
     }
 
     public function trigger($expression, $args)

@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Validator;
 
 class API
 {
+    public const MODE_INDEX = 'index';
+    public const MODE_GET = 'get';
+    public const MODE_POST = 'post';
+    public const MODE_PUT = 'put';
+    public const MODE_DELETE = 'delete';
+
     public $definition;
     public $apis;
 
@@ -132,33 +138,33 @@ class API
 
     public function index($name, Request $request)
     {
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
+        /** @var Endpoint $endpoint */
+        $endpoint = $this->getEndpoint($name);
+        abort_unless($endpoint, 404);
 
-        $perPage = $request->get('per_page', $api->per_page ?? 25);
+        $perPage = $request->get('per_page', $endpoint->per_page ?? 25);
         $offset = $request->get('offset');
 
         /** @var DynamoBuilder|Builder $query */
-        $query = $this->getBuilder($api);
+        $query = $this->getBuilder($endpoint);
 
-        if ($api->order_by) {
-            $query->orderByRaw($api->order_by);
+        if ($endpoint->order_by) {
+            $query->orderByRaw($endpoint->order_by);
         }
 
-        if ($api->soft_deletes) {
+        if ($endpoint->soft_deletes) {
             $query->where(static function($query) {
                 $query->whereNull('deleted_at');
                 //$query->orWhereNull('deleted_at');
             });
         }
 
-        $query = $this->getWhereParameters($query, $api);
+        $query = $this->getWhereParameters($query, $endpoint);
 
         $search = $request->get('search');
-        if ($search && $api->searchable) {
-            $fields = explode(',', $api->searchable ?: '');
-            $fields = $fields ? array_values($fields) : array_keys($api->fields);
+        if ($search && $endpoint->searchable) {
+            $fields = explode(',', $endpoint->searchable ?: '');
+            $fields = $fields ? array_values($fields) : array_keys($endpoint->fields);
 
             $i = 0;
             foreach ($fields as $field) {
@@ -175,13 +181,15 @@ class API
 
 
         if ($this->base->db === \API\Definition\DB::DRIVER_DYNAMO_DB) {
-            $data = $query->paginate($perPage, $total = $query->count(), $api);
+            $data = $query->paginate($perPage, $total = $query->count(), $endpoint);
         } else {
             $data = $query->paginate($perPage);
         }
 
-        $items = $api->dataHydrateItems($data->items(), $request);
-        $items = $api->addRelations($items->toArray(), $request->get('with'), true);
+        $items = $endpoint->dataHydrateItems($data->items(), $request);
+        $items = $endpoint->addRelations($items->toArray(), $request->get('with'), true);
+
+        $this->triggerHydrate(self::MODE_INDEX, $endpoint, $items);
 
         $output = $data->toArray();
         $output['data'] = $items;
@@ -360,11 +368,15 @@ class API
 
     public function get($name, $id, Request $request)
     {
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
+        /** @var Endpoint $endpoint */
+        $endpoint = $this->getEndpoint($name);
+        abort_unless($endpoint, 404);
 
-        return $this->findOne($api, $id, $request);
+        $result = $this->findOne($endpoint, $id, $request);
+
+        $this->triggerHydrate(self::MODE_GET, $endpoint, $result);
+
+        return $result;
     }
 
     public function post($name, Request $request)
@@ -463,18 +475,22 @@ class API
         // TODO create method that finds an entity
         // TODO create a 'get' method to retrieve an entity
 
-        return $this->findOne($endpoint, $id, $request, Endpoint::REQUEST_POST);
+        $result = $this->findOne($endpoint, $id, $request, Endpoint::REQUEST_POST);
+
+        $this->triggerHydrate(self::MODE_POST, $endpoint, $result);
+
+        return $result;
     }
 
     public function put($name, $id, Request $request)
     {
         // check if authentication is required
 
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
+        /** @var Endpoint $endpoint */
+        $endpoint = $this->getEndpoint($name);
+        abort_unless($endpoint, 404);
 
-        $entity = $this->find($api, $id);
+        $entity = $this->find($endpoint, $id);
         abort_unless($entity, 404);
 
         // Check permission if enabled
@@ -486,7 +502,7 @@ class API
         //$localKey = 'device_user_id';
         //$r = new BelongsTo($instance->newQuery(), $entity, 'device_user_id', 'id', 'device_user');
         //dd($r->getQuery()->toSql(), $r->get());
-        $rules = $api->getValidationRules(Endpoint::REQUEST_PUT);
+        $rules = $endpoint->getValidationRules(Endpoint::REQUEST_PUT);
         //dd($rules);
 
         // go through all the columns and also validate the data
@@ -508,7 +524,7 @@ class API
         //dd($data, $rules);
         abort_unless($data, 400, 'No data set');
 
-        $model = $this->createModelInstance($api);
+        $model = $this->createModelInstance($endpoint);
 
 
         if (method_exists($entity, 'toArray')) {
@@ -518,17 +534,17 @@ class API
         }
         //$data = array_merge($entityData, $data);
         // compare and only fill data that is empty
-        $data = $api->fillDefaultValues($data, $entityData, Endpoint::REQUEST_PUT);
+        $data = $endpoint->fillDefaultValues($data, $entityData, Endpoint::REQUEST_PUT);
 
         // Unset values that should be unchangeable like ID
         //unset($data[$api->getIdentifier()]);
 
-        if ($api->timestamps) {
+        if ($endpoint->timestamps) {
             $data['updated_at'] = date('Y-m-d H:i:s');
         }
 
         if ($model) {
-            $entity->fillable($api->getFieldNames());
+            $entity->fillable($endpoint->getFieldNames());
             if ($model->getFillable()) {
                 //$data = array_intersect_key($data, array_flip($model->getFillable()));
             }
@@ -536,8 +552,8 @@ class API
             //dd($data);
             $entity->update($data);
         } else {
-            DB::table($api->getTableName())
-                ->where($api->getIdentifier(), $id)
+            DB::table($endpoint->getTableName())
+                ->where($endpoint->getIdentifier(), $id)
                 ->update($data);
         }
 
@@ -545,7 +561,11 @@ class API
             $endpoint->update->triggerAfter($model, $data);
         }
 
-        return $this->findOne($api, $id, $request);
+        $result = $this->findOne($endpoint, $id, $request);
+
+        $this->triggerHydrate(self::MODE_PUT, $endpoint, $result);
+
+        return $result;
     }
 
     public function delete($name, $id, Request $request)
@@ -596,7 +616,11 @@ class API
         }
 
         if ($affected) {
-            return response('', 204);
+            $result = [];
+
+            $this->triggerHydrate(self::MODE_DELETE, $endpoint, $result);
+
+            return response(empty($result) ? '' : $result, 204);
         }
 
         abort(400, 'Unable to delete entity');
@@ -661,6 +685,21 @@ class API
         }
 
         return $items;
+    }
+
+    /**
+     * @param string $mode
+     * @param Endpoint $endpoint
+     * @param array $array
+     * @return array
+     */
+    private function triggerHydrate($mode, $endpoint, &$array)
+    {
+        if (isset($endpoint->$mode->hydrate)) {
+            $array = $endpoint->$mode->triggerHydrate($array);
+        }
+
+        return $array;
     }
 
     public function getBuilder(Endpoint $endpoint)

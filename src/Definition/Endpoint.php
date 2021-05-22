@@ -98,6 +98,11 @@ class Endpoint
      */
     public $find;
 
+    /**
+     * @var EndpointPath
+     */
+    public $get;
+
     public function __construct(array $data)
     {
         $paths = ['index', 'create', 'update', 'delete', 'get'];
