@@ -158,20 +158,18 @@ class OpenAPI
             ];
 
             $properties = [];
-            $propertiesCreate = [];
             foreach ($api->fields as $k => $v) {
                 $properties[$k] = [
                     'type' => 'string',
                 ];
+            }
 
-                $propertiesCreate[] = [
-                    'in' => 'body',
-                    'name' => $k,
-                    'required' => true,
-                    'schema' => [
-                        'type' => 'integer'
-                    ]
-                ];
+            if (isset($api->relations)) {
+                foreach ($api->relations as $k => $v) {
+                    $properties[$k.'_id'] = [
+                        'type' => 'integer',
+                    ];
+                }
             }
 
             if ($api->create !== false) {
