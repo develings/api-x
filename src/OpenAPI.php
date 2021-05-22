@@ -122,24 +122,27 @@ class OpenAPI
             }
 
             $definition = [];
-            $definition['get'] = [
-                'tags' => $tags,
-                'parameters' => $getParameters,
-                'responses' => [
-                    200 => [
-                        'description' => 'Success',
-                        'content' => [
-                            'application/json' => [
-                                'schema' => [
-                                    '$ref' => '#/components/schemas/' . $key . '_paginated',
-                                    //'type' => 'object',
-                                    //'properties' => array_flip(array_keys($api['fields'] ?? []))
+
+            if ($api->index !== false) {
+                $definition['get'] = [
+                    'tags' => $tags,
+                    'parameters' => $getParameters,
+                    'responses' => [
+                        200 => [
+                            'description' => 'Success',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        '$ref' => '#/components/schemas/' . $key . '_paginated',
+                                        //'type' => 'object',
+                                        //'properties' => array_flip(array_keys($api['fields'] ?? []))
+                                    ]
                                 ]
                             ]
                         ]
                     ]
-                ]
-            ];
+                ];
+            }
 
             $e200 = [
                 'description' => 'Success',
@@ -171,22 +174,24 @@ class OpenAPI
                 ];
             }
 
-            $definition['post'] = [
-                'tags' => $tags,
-                'responses' => [
-                    200 => $e200
-                ],
-                'requestBody' => [
-                    'required' => true,
-                    'content' => [
-                        'application/json' => [
-                            'schema' => [
-                                '$ref' => '#/components/schemas/' . $key
+            if ($api->create !== false) {
+                $definition['post'] = [
+                    'tags' => $tags,
+                    'responses' => [
+                        200 => $e200
+                    ],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    '$ref' => '#/components/schemas/' . $key
+                                ]
                             ]
                         ]
                     ]
-                ]
-            ];
+                ];
+            }
 
             $data['paths']['/' . $key] = $definition;
 
@@ -196,70 +201,72 @@ class OpenAPI
             //];
             //$data['paths']['/' . $key . '/search'] = $definition;
 
-            $definition['get'] = [
-                'tags' => $tags,
-                'responses' => [
-                    200 => $e200
-                ],
-                'parameters' => [
-                    [
-                        'in' => 'path',
-                        'name' => 'id',
-                        'required' => true,
-                        'schema' => [
-                            'type' => 'integer'
-                        ]
-                    ]
-                ],
-            ];
-
-            //$definition['post'] = [
-            //    'responses' => []
-            //];
-
-            $definition['put'] = [
-                'tags' => $tags,
-                'responses' => [
-                    200 => $e200
-                ],
-                'parameters' => [
-                    [
-                        'in' => 'path',
-                        'name' => 'id',
-                        'required' => true,
-                        'schema' => [
-                            'type' => 'integer'
-                        ]
-                    ]
-                ],
-                'requestBody' => [
-                    'required' => true,
-                    'content' => [
-                        'application/json' => [
+            if ($api->get !== false) {
+                $definition['get'] = [
+                    'tags' => $tags,
+                    'responses' => [
+                        200 => $e200
+                    ],
+                    'parameters' => [
+                        [
+                            'in' => 'path',
+                            'name' => 'id',
+                            'required' => true,
                             'schema' => [
-                                '$ref' => '#/components/schemas/' . $key
+                                'type' => 'integer'
+                            ]
+                        ]
+                    ],
+                ];
+            }
+
+            if ($api->update !== false) {
+                $definition['put'] = [
+                    'tags' => $tags,
+                    'responses' => [
+                        200 => $e200
+                    ],
+                    'parameters' => [
+                        [
+                            'in' => 'path',
+                            'name' => 'id',
+                            'required' => true,
+                            'schema' => [
+                                'type' => 'integer'
+                            ]
+                        ]
+                    ],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    '$ref' => '#/components/schemas/' . $key
+                                ]
                             ]
                         ]
                     ]
-                ]
-            ];
+                ];
+            }
 
-            $definition['delete'] = [
-                'tags' => $tags,
-                'responses' => [
-                    200 => $e200
-                ],
-                'parameters' => [
-                    [
-                        'in' => 'path',
-                        'name' => 'id',
-                        'required' => true,
-                        'schema' => [
-                            'type' => 'integer'
+            if ($api->delete !== false) {
+                $definition['delete'] = [
+                    'tags' => $tags,
+                    'responses' => [
+                        200 => $e200
+                    ],
+                    'parameters' => [
+                        [
+                            'in' => 'path',
+                            'name' => 'id',
+                            'required' => true,
+                            'schema' => [
+                                'type' => 'integer'
+                            ]
                         ]
-                    ]
-                ],
-            ];
+                    ],
+                ];
+            }
 
             $data['paths']['/' . $key . '/{id}'] = $definition;
 

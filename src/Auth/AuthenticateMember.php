@@ -52,9 +52,13 @@ class AuthenticateMember
             'api.index' => 'index',
             'api.get' => 'get',
         ];
+
+        $endpointPath = $endpoint->{$methods[$routeName]} ?? null;
+        abort_if($endpointPath === false, 404);
         
         /** @var EndpointPath $path */
-        if($endpoint && ($path = $endpoint->{$methods[$routeName]} ?? null) && $pathAuth = $path->authentication) {
+        if ($endpointPath && $endpointPath->authentication) {
+            $pathAuth = $endpointPath->authencation;
             if (is_array($pathAuth) && !isset($pathAuth['on'])) {
                 $auths->prepend(...$pathAuth);
             } else {

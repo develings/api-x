@@ -63,17 +63,17 @@ class Endpoint
     public $fields_cast;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $create;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $update;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $delete;
 
@@ -85,7 +85,7 @@ class Endpoint
     public $secondary_sort_key;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $index;
 
@@ -94,12 +94,12 @@ class Endpoint
     public $indexes;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $find;
 
     /**
-     * @var EndpointPath
+     * @var EndpointPath|false
      */
     public $get;
 
@@ -119,7 +119,7 @@ class Endpoint
                 }
             }
 
-            if (in_array($key, $paths, true)) {
+            if (in_array($key, $paths, true) && $value !== false) {
                 $value = new EndpointPath($value);
             }
 
