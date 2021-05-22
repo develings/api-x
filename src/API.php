@@ -450,8 +450,8 @@ class API
             $model->saveOrFail();
             $id = $model->{$endpoint->getIdentifier()};
 
-            if ($endpoint->create && $endpoint->create->after) {
-                $endpoint->create->triggerAfter($model);
+            if (isset($endpoint->create->after)) {
+                $endpoint->create->triggerAfter($model, $data);
             }
 
         } else {
@@ -539,6 +539,10 @@ class API
             DB::table($api->getTableName())
                 ->where($api->getIdentifier(), $id)
                 ->update($data);
+        }
+
+        if (isset($endpoint->put->after)) {
+            $endpoint->put->triggerAfter($model, $data);
         }
 
         return $this->findOne($api, $id, $request);
