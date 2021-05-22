@@ -22,6 +22,7 @@ class Model
         $stub = File::get(__DIR__ . '/stubs/Model.stub');
 
         $dynamicFields = '';
+        $classProperties = '';
         foreach ($endpoint->fields as $key => $field) {
             $tab = '    ';
             //$def = $tab .'/**' . PHP_EOL;
@@ -39,6 +40,8 @@ class Model
         if ($endpoint->timestamps) {
             $dynamicFields .= ' * @property string created_at' . PHP_EOL;
             $dynamicFields .= ' * @property string updated_at' . PHP_EOL;
+        } else {
+            $classProperties .= '    public $timestamps = false;' . PHP_EOL;
         }
         
         if ($endpoint->soft_deletes) {
@@ -111,7 +114,8 @@ class Model
                 ucfirst(Str::camel($definition['name'])),
                 "namespace App\\Models;\n\n",
                 $endpoint->getTableName(),
-                implode("\n\n", $methods)
+                implode("\n\n", $methods),
+                $classProperties,
             ],
             $stub
         );
