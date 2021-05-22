@@ -49,7 +49,12 @@ class MigrateCommand extends Command
         
         $tables = $tables ? explode(',', $tables) : [];
 
-        $force = $this->option('force') ?: false;
+        $force = false;
+        $forceParam = $this->option('force') ?: false;
+        if ($forceParam && ($forceParam === 'true' || $forceParam === true)) {
+            $force = true;
+        }
+
         $migrator->migrate($tables, $force);
     
         $this->line('');
