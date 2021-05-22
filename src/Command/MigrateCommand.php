@@ -21,7 +21,7 @@ class MigrateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'api:migrate {--table=} {--id=} {--user=} {--tag=true}';
+    protected $signature = 'api:migrate {--table=} {--id=} {--user=} {--tag=true}  {--force=false}';
     
     /**
      * The console command description.
@@ -48,8 +48,9 @@ class MigrateCommand extends Command
         $this->line('');
         
         $tables = $tables ? explode(',', $tables) : [];
-    
-        $migrator->migrate($tables);
+
+        $force = $this->option('force') ?: false;
+        $migrator->migrate($tables, $force);
     
         $this->line('');
         $this->info('All done');

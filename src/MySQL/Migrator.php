@@ -32,6 +32,7 @@ class Migrator
             $tableName = $this->api->base->getTableName($table);
             
             if ($force) {
+                $this->line(sprintf('Deleting <info>%s</info>...', $tableName));
                 Schema::disableForeignKeyConstraints();
                 Schema::dropIfExists($tableName);
                 Schema::enableForeignKeyConstraints();
