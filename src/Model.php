@@ -13,7 +13,7 @@ class Model
         $definition = $endpoint->definition;
         $api = API::getInstance();
 
-        $path = base_path('app/' . ucfirst(Str::camel($endpoint->name)) . '.php');
+        $path = base_path('app/Models/' . ucfirst(Str::camel($endpoint->name)) . '.php');
 
         if (!$force && File::exists($path)) {
             //return false;
