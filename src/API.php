@@ -546,12 +546,12 @@ class API
 
     public function delete($name, $id, Request $request)
     {
-        /** @var Endpoint $api */
-        $api = $this->getEndpoint($name);
-        abort_unless($api, 404);
+        /** @var Endpoint $endpoint */
+        $endpoint = $this->getEndpoint($name);
+        abort_unless($endpoint, 404);
 
-        $entity = $this->find($api, $id);
-        abort_unless($entity, 404);
+        $model = $this->find($endpoint, $id);
+        abort_unless($model, 404);
 
         // Distinguish between model and normal db
 
@@ -562,33 +562,33 @@ class API
         //$data = $api->fillDefaultValues($data);
         // Unset values that should be changeable like ID
 
-        $method = $api->soft_deletes ? 'update' : 'delete';
+        $method = $endpoint->soft_deletes ? 'update' : 'delete';
 
         $data = ['deleted_at' => date('Y-m-d H:i:s')];
-        $entityArray = $entity->toArray();
+        $entityArray = $model->toArray();
 
-        if ($entity) {
+        if ($model) {
             //$data = array_intersect_key($data, array_flip($model->getFillable()));
             //$model->fill($data);
             //
-            $entity->fillable($api->getFieldNames());
+            $model->fillable($endpoint->getFieldNames());
             //dd($entity, $method, $data);
-            $affected = $entity->$method($data);
+            $affected = $model->$method($data);
             //$modelId = $model->{$api->identifier};
             //dd('missing');
         } else {
-            $query = DB::table($api->getTableName())
-                       ->where($api->getIdentifier(), $id);
+            $query = DB::table($endpoint->getTableName())
+                       ->where($endpoint->getIdentifier(), $id);
 
-            if ($api->soft_deletes) {
+            if ($endpoint->soft_deletes) {
                 $affected = $query->update($data);
             } else {
                 $affected = $query->delete();
             }
         }
 
-        if (isset($api->delete->after)) {
-            $api->delete->triggerAfter($entity, $entityArray);
+        if (isset($endpoint->delete->after)) {
+            $endpoint->delete->triggerAfter($model, $entityArray);
         }
 
         if ($affected) {
