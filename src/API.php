@@ -541,8 +541,8 @@ class API
                 ->update($data);
         }
 
-        if (isset($endpoint->put->after)) {
-            $endpoint->put->triggerAfter($model, $data);
+        if (isset($endpoint->update->after)) {
+            $endpoint->update->triggerAfter($model, $data);
         }
 
         return $this->findOne($api, $id, $request);
