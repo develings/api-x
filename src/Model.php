@@ -109,7 +109,7 @@ class Model
             ],
             [
                 ucfirst(Str::camel($definition['name'])),
-                "namespace App;\n\n",
+                "namespace App\\Models;\n\n",
                 $endpoint->getTableName(),
                 implode("\n\n", $methods)
             ],

@@ -725,6 +725,8 @@ class API
             $model = DynamoModel::createInstance($tableName);
             $model->setKeyName($endpoint->getIdentifier());
             //$model = new DynamoBuilder($model);
+        } elseif (class_exists($endpoint->getModelClassNamespace())) {
+            $model = $endpoint->createModelInstance();
         } else {
             $model = DynamicModel::createInstance($tableName);
             $model->fillable($endpoint->getFieldNames());

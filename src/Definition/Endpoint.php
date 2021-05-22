@@ -254,12 +254,24 @@ class Endpoint
     }
 
     /**
+     * @return string
+     */
+    public function getModelClassNamespace()
+    {
+        return "App\\Models\\" . ucfirst(Str::camel($this->name));
+    }
+
+    /**
      * @return Model|null
      */
     public function createModelInstance()
     {
         if ($this->model && class_exists($this->model)) {
             return new $this->model;
+        }
+
+        if (class_exists($this->getModelClassNamespace())) {
+            return new ($this->getModelClassNamespace())();
         }
 
         return null;
