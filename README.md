@@ -91,6 +91,9 @@ composer install envomer/php-laravel-api
         ...
         \API\APIServiceProvider::class,
 
+// add this to AppServiceProvider.php in boot()
+    Model::unguard();
+
 // add the route (e.g. routes/web.php)
 $api = new API\API(base_path('api.json'));
 $api->setRoutes();
