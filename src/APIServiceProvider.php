@@ -2,6 +2,7 @@
 
 namespace API;
 
+use API\Command\InfoCommand;
 use API\Command\MakeApiCommand;
 use API\Command\MakeModelCommand;
 use API\Command\MigrateCommand;
@@ -22,6 +23,7 @@ class APIServiceProvider extends ServiceProvider
                 MakeApiCommand::class,
                 MakeModelCommand::class,
                 MigrateCommand::class,
+                InfoCommand::class,
             ]);
         }
    
