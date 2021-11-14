@@ -3,6 +3,7 @@
 namespace API\MySQL;
 
 use API\API;
+use API\Definition\Endpoint;
 use API\Definition\Field;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
@@ -22,6 +23,9 @@ class Migrator
     {
         $data = $this->api->base;
         
+        $tablesWithForeignKeys = [];
+        $definitions = [];
+        
         foreach ($data->api as $table) {
             if ($tables && !in_array($table->name, $tables, true) ) {
                 // Skip table because it is not selected to be migrated
@@ -40,10 +44,10 @@ class Migrator
             
             //continue;
             $exists = Schema::hasTable($tableName);
-            if ($exists) {
-                $this->line(sprintf('<error> FAIL </error> Table (<info>%s</info>) already exists.', $table->name));
-                continue;
-            }
+            //if ($exists) {
+            //    $this->line(sprintf('<error> FAIL </error> Table (<info>%s</info>) already exists.', $table->name));
+            //    continue;
+            //}
             
             $this->line(sprintf('Migrating <info>%s</info>...', $tableName));
             
@@ -54,14 +58,27 @@ class Migrator
             //$blueprint->create();
             //$blueprint = $this->create($table, $blueprint);
             //dd($blueprint);
+            
+            $method = $exists ? 'table' : 'create';
     
+            $definitions[$tableName] = Schema::getColumnListing($tableName);
     
-            Schema::create($tableName, function(Blueprint $blueprint) use($table) {
-                $this->create($table, $blueprint);
+            Schema::$method($tableName, function(Blueprint $blueprint) use($table, &$tablesWithForeignKeys, $definitions, $tableName) {
+                $this->create($table, $blueprint, $definitions[$tableName]);
+                $tablesWithForeignKeys[$tableName] = $table;
             });
             //
             $this->line(sprintf('Migrated <info>%s</info>.', $tableName));
+            //break;
             //dd($blueprint);
+        }
+        
+        foreach ($tablesWithForeignKeys as $tableName => $table) {
+            Schema::table($tableName, function (Blueprint $blueprint) use($table, $definitions, $tableName) {
+                $this->line(sprintf('Migrating foreign keys <info>%s</info>...', $tableName));
+                $this->makeRelations($table, $blueprint, $definitions[$tableName]);
+                $this->line(sprintf('Migrated foreign keys <info>%s</info>.', $tableName));
+            });
         }
         
         return true;
@@ -92,7 +109,6 @@ class Migrator
         
         foreach ($definitions as $definition) {
             [$name, $parameters] = $this->parseDefinition($definition);
-            
             $this->setOption($column, $name, $parameters);
         }
     }
@@ -151,46 +167,81 @@ class Migrator
      *
      * @return Blueprint
      */
-    private function create(\API\Definition\Endpoint $table, Blueprint $blueprint)
+    private function create(\API\Definition\Endpoint $table, Blueprint $blueprint, $definitions)
     {
         $fields = $table->fields;
         foreach ($fields as $key => $field) {
+            if (in_array($field->key, $definitions, true)) {
+                continue;
+            }
+            
             $this->parseColumnDefinition($field, $blueprint, $key);
         }
+    
+        if( ($table->timestamps ?? false) && !in_array('created_at', $definitions, true) ) {
+            $blueprint->timestamps();
+        }
+    
+        if( ($table->soft_deletes ?? false) && !in_array('deleted_at', $definitions, true) ) {
+            $blueprint->softDeletes();
+        }
         
+        // hmm? what does this do?
+        //if ($table->unique) {
+        //    // Convert unique to an array of associative array
+        //    $uniques = !isset($table->unique[0]) ? $table->unique : [$table->unique];
+        //    collect($uniques)->map(function($keys, $id) use($blueprint) {
+        //        $blueprint->unique($keys, !$id || is_numeric($id) ? null : $id);
+        //    });
+        //}
+        
+        return $blueprint;
+    }
+    
+    public function makeRelations(Endpoint $table, Blueprint $blueprint, $definitions)
+    {
         $relations = $table->relations ?? [];
         //$relations = [];
         foreach ($relations as $relationName => $relation) {
+            if (in_array($relationName, $definitions, true)) {
+                continue;
+            }
+            
             $parts = explode('|', $relation->definition);
             $column = null;
-            
+        
             foreach ($parts as $part) {
                 $parameters = explode(':', $part);
                 $method = array_shift($parameters);
-                
+            
                 $validRelationTypes = ['belongsTo', 'hasOne'];
                 if( !in_array($method, $validRelationTypes, true) ) {
                     continue;
                 }
-                
+            
                 $column = $column ?: $blueprint;
                 //if( !method_exists($column, $method) ) {
                 //    dump('method does not exist: ' . $method);
                 //    continue;
                 //}
-                
+            
                 if( $parameters ) {
                     $parameters = explode(',', $parameters[0]);
                 }
-                
+            
                 //if( $method === 'belongsTo' || $method === 'hasOne' ) {
                 $fieldName = $parameters[1] ?? $relationName . '_id';
+    
+                if (in_array($fieldName, $definitions, true)) {
+                    continue;
+                }
+                
                 $relationEndpoint = $this->api->getEndpoint($parameters[0]);
                 if( !$relationEndpoint ) {
                     $this->error(sprintf('Relation table %s does not exist', $parameters[0]));
                     continue;
                 }
-                
+            
                 $relationTableName = $this->api->base->getTableName($relationEndpoint);
                 $field = $column->foreignId($fieldName);
                 if ($relation->isNullable()) {
@@ -199,9 +250,10 @@ class Migrator
                 if ($relation->isUnique()) {
                     $field = $field->unique();
                 }
+                
                 $field->constrained($relationTableName);
                 //}
-    
+            
                 //if( $method === 'hasOne' ) {
                 //    $fieldName = $parameters[1] ?? $relationName . '_id';
                 //    $relationEndpoint = $this->api->getEndpoint($parameters[0]);
@@ -214,23 +266,5 @@ class Migrator
                 //}
             }
         }
-    
-        if( $table->timestamps ?? false ) {
-            $blueprint->timestamps();
-        }
-    
-        if( $table->soft_deletes ?? false ) {
-            $blueprint->softDeletes();
-        }
-        
-        if ($table->unique) {
-            // Convert unique to an array of associative array
-            $uniques = !isset($table->unique[0]) ? $table->unique : [$table->unique];
-            collect($uniques)->map(function($keys, $id) use($blueprint) {
-                $blueprint->unique($keys, !$id || is_numeric($id) ? null : $id);
-            });
-        }
-        
-        return $blueprint;
     }
 }

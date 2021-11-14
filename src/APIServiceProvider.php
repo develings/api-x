@@ -24,7 +24,7 @@ class APIServiceProvider extends ServiceProvider
                 MigrateCommand::class,
             ]);
         }
-    
+   
         $app = $this->app;
         
         $middlewares = [
@@ -40,7 +40,7 @@ class APIServiceProvider extends ServiceProvider
             }
         } else {
             // Lumen
-            app()->routeMiddleware($middlewares);
+            $app->routeMiddleware($middlewares);
         }
     }
 }

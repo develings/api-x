@@ -36,9 +36,7 @@ class MigrateCommand extends Command
         
         $api = API::getInstance();
         
-        if ($api->base->db->driver === DB::DRIVER_MYSQL) {
-            $migrator = new MySQLMigrator($api);
-        }
+        $migrator = new MySQLMigrator($api);
         
         $migrator->setInput($this->input);
         $migrator->setOutput($this->output);
