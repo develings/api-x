@@ -1,6 +1,8 @@
+# API X (Work in progress)
+
 ![Logo](logo.png)
 
-# API X
+`BEWARE: This package is still under heavy development and may contain breaking changes with every update.`
 
 Create a full-fledged API only using a simple JSON file.
 
@@ -40,7 +42,7 @@ Search should be easy
             "url": "http://app.test"
         },
         {
-            "url": "https://yelfxekak3.execute-api.eu-central-1.amazonaws.com/dev"
+            "url": "https://someId.execute-api.eu-central-1.amazonaws.com/dev"
         }
     ],
     "api": [
@@ -59,14 +61,14 @@ Search should be easy
                 "api_key": "string|default:alphanumeric,36"
             },
             "relations": {
-                "user": "belongsTo:device_user"
+                "user": "belongsTo:users"
             }
         }
     ]
 }
 ```
 
-We currently support the normal laravel DB drivers including DynamoDB.
+We currently support the normal laravel DB drivers.
 
 This definition will create an OpenAPI specification route plus a
 migration for the device table including the endpoints for it.
@@ -78,7 +80,7 @@ All that needs to be done is to instantiate the API class.
 You just need to require the composer package, and you're done.
 
 ```shell script
-composer install envomer/php-laravel-api
+composer install develings/api-x
 ```
 
 ## Instantiate
