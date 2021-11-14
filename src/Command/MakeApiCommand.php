@@ -48,7 +48,7 @@ class MakeApiCommand extends Command
         $this->line('');
         $this->line('<info>Creating</info> api json file...');
     
-        $stub = File::get(__DIR__ . '/../stubs/ApiJson.stub');
+        $stub = File::get(__DIR__ . '/../../resources/stubs/ApiJson.stub');
     
         File::put(
             $path = base_path($file),

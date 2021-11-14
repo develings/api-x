@@ -19,7 +19,7 @@ class Model
             //return false;
         }
 
-        $stub = File::get(__DIR__ . '/stubs/Model.stub');
+        $stub = File::get(__DIR__ . '/../resources/stubs/Model.stub');
 
         $dynamicFields = '';
         $classProperties = '';
