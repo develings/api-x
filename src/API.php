@@ -121,8 +121,9 @@ class API
 
         $prefix = $this->base->endpoint ?: '';
 
-        Route::group(['prefix' => $prefix], static function() {
-            Route::get('api.json', ['as' => 'openapi', 'uses' => '\API\Routes@getOpenApiJson']);
+        Route::group(['prefix' => $prefix, 'as' => 'api'], static function() {
+            Route::get('api.json', ['as' => '.openapi', 'uses' => '\API\Routes@getOpenApiJson']);
+            Route::get('swagger', ['as' => '.swagger', 'uses' => '\API\Routes@getSwagger']);
         });
 
         Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {

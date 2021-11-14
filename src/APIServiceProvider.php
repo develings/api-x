@@ -43,4 +43,9 @@ class APIServiceProvider extends ServiceProvider
             $app->routeMiddleware($middlewares);
         }
     }
+    
+    public function boot()
+    {
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'api');
+    }
 }

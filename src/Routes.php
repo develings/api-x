@@ -56,4 +56,11 @@ class Routes
         return $this->api->delete($api, $id, $request);
     }
     
+    public function getSwagger()
+    {
+        return view('api::swagger', [
+            'url' => route('api.openapi'),
+        ]);
+    }
+    
 }
