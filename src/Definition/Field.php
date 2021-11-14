@@ -40,12 +40,16 @@ class Field
         foreach ($parts as $raw) {
             $rule = explode(':', $raw);
             $name = array_shift($rule);
+            
+            if (!$this->type) {
+                $this->type = $name;
+            }
 
             $parameters = [];
             if ($rule) {
                 $parameters = explode(',', array_shift($rule));
             }
-
+            
             $rules[$name] = new Rule($name, $raw, $parameters);
         }
 
@@ -70,6 +74,5 @@ class Field
 
         return 'string';
     }
-
 
 }

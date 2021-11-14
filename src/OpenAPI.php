@@ -38,6 +38,8 @@ class OpenAPI
             $servers[$i]['url'] .= $this->base->endpoint;
         }
         
+        $laravelTypes = $this->getLaravelTypes();
+        
         $data = [
             'openapi' => '3.0.2',
             'info' => [
@@ -159,10 +161,12 @@ class OpenAPI
 
             $properties = [];
             foreach ($api->fields as $k => $v) {
-                $properties[$k] = [
-                    'type' => 'string',
-                ];
+                $type = $laravelTypes[$v->type] ?? 'string';
+                $properties[$k] = is_string($type) ? [
+                    'type' => $type,
+                ] : $type;
             }
+            
 
             if (isset($api->relations)) {
                 foreach ($api->relations as $k => $v) {
@@ -170,6 +174,24 @@ class OpenAPI
                         'type' => 'integer',
                     ];
                 }
+            }
+    
+            if (isset($api->timestamps)) {
+                $properties['created_at'] = [
+                    'type' => 'string',
+                    'format' => 'date-time'
+                ];
+                $properties['updated_at'] = [
+                    'type' => 'string',
+                    'format' => 'date-time'
+                ];
+            }
+    
+            if (isset($api->soft_deletes)) {
+                $properties['deleted_at'] = [
+                    'type' => 'string',
+                    'format' => 'date-time'
+                ];
             }
 
             if ($api->create !== false) {
@@ -303,6 +325,76 @@ class OpenAPI
     public function save(string $path)
     {
         return File::put($path, json_encode($this->definition(), JSON_PRETTY_PRINT));
+    }
+    
+    public function getLaravelTypes(): array
+    {
+        return [
+            'bigIncrements' => 'integer',
+            'bigInteger' => 'integer',
+            'binary' => 'binary',
+            'boolean' => 'boolean',
+            'char' => 'char',
+            'dateTimeTz' => 'datetime',
+            'dateTime' => 'datetime',
+            'date' => 'date',
+            'decimal' => 'decimal',
+            'double' => 'double',
+            'enum' => 'enum',
+            'float' => 'float',
+            'foreignId' => 'string',
+            'foreignIdFor' => 'string',
+            'foreignUuid' => 'string',
+            'geometryCollection' => 'string',
+            'geometry' => 'string',
+            'id' => 'integer',
+            'increments' => 'integer',
+            'integer' => 'integer',
+            'ipAddress' => 'string',
+            'json' => 'json',
+            'jsonb' => 'jsonb',
+            'lineString' => 'string',
+            'longText' => 'string',
+            'macAddress' => 'string',
+            'mediumIncrements' => 'integer',
+            'mediumInteger' => 'integer',
+            'mediumText' => 'string',
+            'morphs' => 'string',
+            'multiLineString' => 'string',
+            'multiPoint' => 'string',
+            'multiPolygon' => 'string',
+            'nullableMorphs' => 'string',
+            'nullableTimestamps' => 'string',
+            'nullableUuidMorphs' => 'string',
+            'point' => 'string',
+            'polygon' => 'string',
+            'rememberToken' => 'string',
+            'set' => 'string',
+            'smallIncrements' => 'string',
+            'smallInteger' => 'string',
+            'softDeletesTz' => 'string',
+            'softDeletes' => 'string',
+            'string' => 'string',
+            'text' => 'string',
+            'timeTz' => 'time',
+            'time' => 'time',
+            'timestampTz' => 'string',
+            'timestamp' => 'string',
+            'timestampsTz' => 'string',
+            'timestamps' => 'string',
+            'tinyIncrements' => 'integer',
+            'tinyInteger' => 'integer',
+            'tinyText' => 'string',
+            'unsignedBigInteger' => 'string',
+            'unsignedDecimal' => 'string',
+            'unsignedInteger' => 'string',
+            'unsignedMediumInteger' => 'string',
+            'unsignedSmallInteger' => 'string',
+            'unsignedTinyInteger' => 'string',
+            'uuidMorphs' => 'string',
+            'uuid' => 'uuid',
+            'year' => 'string',
+        ];
     }
 
 }
