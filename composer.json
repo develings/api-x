@@ -1,11 +1,6 @@
 {
-    "name": "envomer/api-x",
-    "authors": [
-        {
-            "name": "Omer Mohamed Ali",
-            "email": "omer.envo@gmail.com"
-        }
-    ],
+    "name": "develings/api-x",
+    "description": "Create a full-fledged API using a simple json file.",
     "require": {
         "php": "^7.3|^8.0",
         "ext-dom": "*",
