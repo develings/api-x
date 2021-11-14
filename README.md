@@ -2,8 +2,18 @@
 
 ![Logo](logo.png)
 
-`BEWARE: This package is still under heavy development and may contain breaking changes with every update.`
+<p align="center">
+<a href="https://github.com/develings/api-x/actions"><img src="https://github.com/develings/api-x/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/develings/api-x"><img src="https://img.shields.io/packagist/dt/develings/api-x" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/develings/api-x"><img src="https://img.shields.io/packagist/v/develings/api-x" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/develings/api-x"><img src="https://img.shields.io/packagist/l/develings/api-x" alt="License"></a>
+</p>
 
+### BE CAREFUL
+This package is still under heavy development and may contain breaking changes with every update.
+
+
+### About
 Create a full-fledged API only using a simple JSON file.
 
 ### TODO
