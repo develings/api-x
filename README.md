@@ -6,9 +6,6 @@
 
 Create a full-fledged API only using a simple JSON file.
 
-Give me all of the _____ for a particular _____.
-EG: Give me all of the OrderIds for a particular Username;
-
 ### TODO
 - [ ] Pagination
 - [ ] Search
@@ -31,10 +28,10 @@ Search should be easy
     "version": "1.0",
     "description": "A demo application using the API library",
     "endpoint": "/api/v1.0/",
-    "authentication": "token:device_user,api_key",
+    "authentication": "token:users,api_key",
     "events": true,
     "db": {
-        "driver": "dynamoDB",
+        "driver": "mariadb",
         "prefix": "app_test_"
     },
     "servers": [
@@ -83,15 +80,21 @@ You just need to require the composer package, and you're done.
 composer install develings/api-x
 ```
 
+Create api.json in the root of your project.
+```shell script
+php artisan api:make
+```
+
 ## Instantiate
 ```php
 // add this to config/app.php
-    'providers' => [
-        ...
-        \API\APIServiceProvider::class,
+'providers' => [
+    ...
+    \API\APIServiceProvider::class,
+],
 
 // add this to AppServiceProvider.php in boot()
-    Model::unguard();
+Model::unguard();
 
 // add the route (e.g. routes/web.php)
 $api = new API\API(base_path('api.json'));
@@ -101,13 +104,7 @@ $api->setRoutes();
 ## Fake data
 
 Since we have all the definition we need from the **api.json** file, it's also possible
-to populate test data using the **faker** package.
-
-## Serverless
-
-It's very easy to get your entire app up and running withing minutes even without
-setting up a server first. Here we'll use the AWS lambda functionality to handle
-your code.
+to populate test data using the **faker** package. **Coming soon**
 
 ## Planned features
 
