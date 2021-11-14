@@ -19,5 +19,12 @@
     "prefer-stable": true,
     "require-dev": {
         "pestphp/pest": "^1.20"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "API\\APIServiceProvider"
+            ]
+        }
     }
 }
