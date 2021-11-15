@@ -214,7 +214,7 @@ class Migrator
                 $parameters = explode(':', $part);
                 $method = array_shift($parameters);
             
-                $validRelationTypes = ['belongsTo', 'hasOne'];
+                $validRelationTypes = ['belongsTo'];
                 if( !in_array($method, $validRelationTypes, true) ) {
                     continue;
                 }
