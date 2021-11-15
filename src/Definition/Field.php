@@ -72,7 +72,7 @@ class Field
     {
         $types = ['string', 'int', 'boolean', 'float', 'array', 'object', 'null'];
 
-        return 'string';
+        return $this->type ?: 'string';
     }
 
 }
