@@ -201,6 +201,8 @@ class Migrator
     public function makeRelations(Endpoint $table, Blueprint $blueprint, $definitions)
     {
         $relations = $table->relations ?? [];
+        $isSqlite = config('database.default') === 'sqlite';
+        
         //$relations = [];
         foreach ($relations as $relationName => $relation) {
             if (in_array($relationName, $definitions, true)) {
@@ -246,6 +248,8 @@ class Migrator
                 $field = $column->foreignId($fieldName);
                 if ($relation->isNullable()) {
                     $field = $field->nullable();
+                } else if($isSqlite) {
+                    $column->default('');
                 }
                 if ($relation->isUnique()) {
                     $field = $field->unique();
