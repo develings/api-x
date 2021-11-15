@@ -249,6 +249,7 @@ class Migrator
                 if ($relation->isNullable()) {
                     $field = $field->nullable();
                 } else if($isSqlite) {
+                    // SQLite: if not nullable, it will be set to default value (https://stackoverflow.com/questions/20822159/laravel-migration-with-sqlite-cannot-add-a-not-null-column-with-default-value-n)
                     $field->default('');
                 }
                 if ($relation->isUnique()) {
