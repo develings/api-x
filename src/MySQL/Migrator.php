@@ -249,7 +249,7 @@ class Migrator
                 if ($relation->isNullable()) {
                     $field = $field->nullable();
                 } else if($isSqlite) {
-                    $column->default('');
+                    $field->default('');
                 }
                 if ($relation->isUnique()) {
                     $field = $field->unique();
