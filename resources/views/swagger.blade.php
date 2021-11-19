@@ -39,7 +39,7 @@
     window.onload = function() {
         // Begin Swagger UI call region
         const ui = SwaggerUIBundle({
-            url: "http://video-api.test/api/v1.0/api.json",
+            url: "{{ $url }}",
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [
