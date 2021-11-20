@@ -51,8 +51,7 @@ class Model
 
         $methods = [];
         if ($endpoint->relations) {
-            $relationTemplate = "
-    public function relationName()
+            $relationTemplate = "    public function relationName()
     {
         return \$this->methodName(relationTable foreignKey ownerKey);
     }";
@@ -101,6 +100,10 @@ class Model
                     $relationTemplate
                 );
             }
+        }
+        
+        if (count($methods) > 2) {
+            //dd($methods);
         }
 
         $stub = str_replace(

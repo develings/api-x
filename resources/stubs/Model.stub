@@ -10,9 +10,7 @@ class DummyClass extends Model
 {
 	public $table = 'dummyTableName';
 
-	protected $guarded = [];
-
-dummyProperties
+	protected $guarded = [];dummyProperties
 
 dummyMethods
 }
