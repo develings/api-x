@@ -84,7 +84,7 @@ class AuthenticateMember
             
             abort_unless($method, 501, 'Authentication method missing');
 
-            $className = '\API\\Auth\\' . ucfirst($method);
+            $className = '\ApiX\\Auth\\' . ucfirst($method);
             abort_unless(class_exists($className), 501, 'Authentication class does not exist');
             $parameters = explode(',', $expression[1] ?? '');
 

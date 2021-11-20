@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\ApiX;
+use ApiX\Facade\ApiX;
 use ApiX\Definition\DB;
 use ApiX\DynamoDB\Migrator;
 use ApiX\Model;

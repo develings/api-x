@@ -5,6 +5,7 @@ namespace ApiX;
 use ApiX\Definition\Endpoint;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use ApiX\Facade\ApiX;
 
 class Model
 {

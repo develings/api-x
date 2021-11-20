@@ -44,7 +44,7 @@ class ApiX
      */
     private $valid = true;
 
-    public function __construct(string $path)
+    public function load(string $path)
     {
         $app = app();
         $app->instance(self::class, $this);
@@ -69,9 +69,9 @@ class ApiX
     /**
      * @return self
      */
-    public static function getInstance(): self
+    public function getInstance(): self
     {
-        return app()->get(self::class);
+        return $this;
     }
 
     public function do()
@@ -120,17 +120,17 @@ class ApiX
         $prefix = $this->base->endpoint ?: '';
 
         Route::group(['prefix' => $prefix, 'as' => 'api'], static function() {
-            Route::get('api.json', ['as' => '.openapi', 'uses' => '\API\Routes@getOpenApiJson']);
-            Route::get('swagger', ['as' => '.swagger', 'uses' => '\API\Routes@getSwagger']);
+            Route::get('api.json', ['as' => '.openapi', 'uses' => '\ApiX\Routes@getOpenApiJson']);
+            Route::get('swagger', ['as' => '.swagger', 'uses' => '\ApiX\Routes@getSwagger']);
         });
 
         Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
-            Route::get('migrate', ['as' => '.migrate', 'uses' => '\API\Routes@migrate']); //
-            Route::get('{api}', ['as' => '.index', 'uses' => '\API\Routes@index']);
-            Route::post('{api}', ['as' => '.post', 'uses' => '\API\Routes@post']);
-            Route::get('{api}/{id}', ['as' => '.get', 'uses' => '\API\Routes@get']);
-            Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\API\Routes@put']);
-            Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\API\Routes@delete']);
+            Route::get('migrate', ['as' => '.migrate', 'uses' => '\ApiX\Routes@migrate']); //
+            Route::get('{api}', ['as' => '.index', 'uses' => '\ApiX\Routes@index']);
+            Route::post('{api}', ['as' => '.post', 'uses' => '\ApiX\Routes@post']);
+            Route::get('{api}/{id}', ['as' => '.get', 'uses' => '\ApiX\Routes@get']);
+            Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\ApiX\Routes@put']);
+            Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\ApiX\Routes@delete']);
         });
     }
 

@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Schema;
 class Migrator
 {
     use \Illuminate\Console\Concerns\InteractsWithIO;
-    public $api;
+    
+    private $api;
     
     public function __construct(ApiX $api)
     {

@@ -2,9 +2,9 @@
 
 namespace ApiX\Command;
 
-use ApiX\ApiX;
 use ApiX\Definition\DB;
 use ApiX\DynamoDB\Migrator;
+use ApiX\Facade\ApiX;
 use ApiX\MySQL\Migrator as MySQLMigrator;
 use Aws\AwsClient;
 use Illuminate\Support\Facades\App;

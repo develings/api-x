@@ -2,7 +2,7 @@
 
 namespace ApiX\Definition;
 
-use ApiX\ApiX;
+use ApiX\Facade\ApiX;
 use ApiX\DynamoBuilder;
 use ApiX\DynamoModel;
 use Illuminate\Database\Eloquent\Model;

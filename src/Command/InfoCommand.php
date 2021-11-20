@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\ApiX;
+use ApiX\Facade\ApiX;
 use Illuminate\Console\Command;
 
 class InfoCommand extends Command
@@ -23,8 +23,6 @@ class InfoCommand extends Command
     
     public function handle()
     {
-        $api = ApiX::getInstance();
-        
         $this->line('');
         $this->line('<info>ApiX X</info> info:');
         $this->line('');
