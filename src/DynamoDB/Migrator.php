@@ -2,7 +2,7 @@
 
 namespace ApiX\DynamoDB;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\Base;
 use Aws\AwsClient;
 use Aws\DynamoDb\DynamoDbClient;
@@ -39,7 +39,7 @@ class Migrator
         foreach ($base->api as $api) {
             $definition = new Table($base->getTableName($api));
             $field = $api->getField($api->getIdentifier());
-            abort_unless($field, 501, 'Field is missing for API endpoint');
+            abort_unless($field, 501, 'Field is missing for ApiX endpoint');
             
             $definition->addKey($field->key, Table::KEY_TYPE_HASH);
             
@@ -65,8 +65,8 @@ class Migrator
     
     public function migrate()
     {
-        /** @var API $api */
-        $api = \app()->get(API::class);
+        /** @var ApiX $api */
+        $api = \app()->get(ApiX::class);
         $definition = $this->getDefinition($api->base);
         
         dd($definition);

@@ -27,7 +27,7 @@ class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder
         
         //$items = !$items ? $items : $items;
         
-        $api = app()->get(API::class);
+        $api = app()->get(ApiX::class);
         
         $paginator = new Paginator($itemsArray, $perPage);
         

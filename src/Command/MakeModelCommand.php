@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\DB;
 use ApiX\DynamoDB\Migrator;
 use ApiX\Model;
@@ -35,7 +35,7 @@ class MakeModelCommand extends Command
     {
         $tables = $this->option('table');
         
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
         
         $this->line('');
         $this->line('<info>Creating</info> model class...');

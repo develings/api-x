@@ -36,7 +36,7 @@ Search should be easy
 {
     "name": "App",
     "version": "1.0",
-    "description": "A demo application using the API library",
+    "description": "A demo application using the ApiX library",
     "endpoint": "/api/v1.0/",
     "authentication": "token:users,api_key",
     "events": true,
@@ -108,7 +108,7 @@ php artisan api:make
 Model::unguard();
 
 // add the route (e.g. routes/web.php)
-$api = new ApiX\API(base_path('api.json'));
+$api = new ApiX\ApiX(base_path('api.json'));
 $api->setRoutes();
 ``` 
 
@@ -124,11 +124,11 @@ Use route syntax to fetch code from PHP instead of api.json. Eg:
 ```json
 {
     "api": [
-        "@App\\API\\DeviceAPI",
-        "@App\\API\\UserAPI:getDefinition",
+        "@App\\ApiX\\DeviceAPI",
+        "@App\\ApiX\\UserAPI:getDefinition",
         {
             "name": "company",
-            "fields": "@App\\API\\CompanyAPI:getFields"
+            "fields": "@App\\ApiX\\CompanyAPI:getFields"
         }
     ]
 }

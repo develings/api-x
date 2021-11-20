@@ -2,7 +2,7 @@
 
 namespace ApiX\Definition;
 
-use ApiX\API;
+use ApiX\ApiX;
 
 trait RuleTrait
 {
@@ -53,7 +53,7 @@ trait RuleTrait
             }
 
             if ($name === 'unique') {
-                $api = \ApiX\API::getInstance();
+                $api = \ApiX\ApiX::getInstance();
                 $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
                 continue;
             }

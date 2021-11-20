@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\DB;
 use ApiX\DynamoDB\Migrator;
 use ApiX\MySQL\Migrator as MySQLMigrator;
@@ -28,13 +28,13 @@ class MigrateCommand extends Command
      *
      * @var string
      */
-    protected $description = 'API Migrate';
+    protected $description = 'ApiX Migrate';
     
     public function handle()
     {
         $tables = $this->option('table');
         
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
         
         $migrator = new MySQLMigrator($api);
         

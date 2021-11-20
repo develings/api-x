@@ -2,7 +2,7 @@
 
 namespace ApiX\MySQL;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\Endpoint;
 use ApiX\Definition\Field;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,7 +14,7 @@ class Migrator
     use \Illuminate\Console\Concerns\InteractsWithIO;
     public $api;
     
-    public function __construct(API $api)
+    public function __construct(ApiX $api)
     {
         $this->api = $api;
     }

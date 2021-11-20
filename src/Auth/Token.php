@@ -2,7 +2,7 @@
 
 namespace ApiX\Auth;
 
-use ApiX\API;
+use ApiX\ApiX;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -26,8 +26,8 @@ class Token
     public function handle(Request $request)
     {
         //return true;
-        /** @var API $api */
-        $api = app()->get(API::class);
+        /** @var ApiX $api */
+        $api = app()->get(ApiX::class);
         $endpoint = $api->getEndpoint($this->db_name);
         
         abort_unless($endpoint, 501, sprintf('Endpoint (%s) not found', $this->db_name));

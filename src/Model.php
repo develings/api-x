@@ -11,7 +11,7 @@ class Model
     public function createModel(Endpoint $endpoint, bool $force = false)
     {
         $definition = $endpoint->definition;
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
 
         $path = base_path('app/Models/' . ucfirst(Str::camel($endpoint->name)) . '.php');
 

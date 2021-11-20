@@ -4,7 +4,7 @@ namespace ApiX\DynamoDB;
 
 /**
  * Class Table
- * @package API\DynamoDB
+ * @package ApiX\DynamoDB
  * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html#cfn-dynamodb-table-billingmode
  */
 class Table

@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\DB;
 use ApiX\DynamoDB\Migrator;
 use ApiX\Model;
@@ -32,7 +32,7 @@ class MakeApiCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Make API json file';
+    protected $description = 'Make ApiX json file';
     
     public function handle()
     {
@@ -41,7 +41,7 @@ class MakeApiCommand extends Command
         $force = $this->option('force') ?: false;
         
         if (!$force && file_exists(base_path($file))) {
-            $this->error("\nAPI File already exists ($file)");
+            $this->error("\nApiX File already exists ($file)");
             return $this->line('');
         }
         

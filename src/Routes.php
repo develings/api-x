@@ -7,16 +7,16 @@ use Illuminate\Http\Request;
 class Routes
 {
     /**
-     * @var API
+     * @var ApiX
      */
     public $api;
     
     /**
      * Routes constructor.
      *
-     * @param API $api
+     * @param ApiX $api
      */
-    public function __construct(API $api)
+    public function __construct(ApiX $api)
     {
         $this->api = $api;
     }

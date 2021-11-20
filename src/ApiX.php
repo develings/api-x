@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 
-class API
+class ApiX
 {
     public const MODE_INDEX = 'index';
     public const MODE_GET = 'get';
@@ -53,12 +53,12 @@ class API
         //    return $this->valid = false;
         //}
 
-        abort_unless(file_exists($path), 501, "API json file not found ($path)");
+        abort_unless(file_exists($path), 501, "ApiX json file not found ($path)");
 
         $data = file_get_contents($path);
         $data = json_decode($data, 1);
 
-        abort_unless($data, 505, "API JSON file ($path) is invalid: " . json_last_error_msg());
+        abort_unless($data, 505, "ApiX JSON file ($path) is invalid: " . json_last_error_msg());
 
         $this->definition = $data;
 

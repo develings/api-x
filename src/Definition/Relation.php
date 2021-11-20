@@ -2,14 +2,14 @@
 
 namespace ApiX\Definition;
 
-use ApiX\API;
+use ApiX\ApiX;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use ApiX\Definition\Base;
 
 /**
  * Class Relation
- * @package API\Definition
+ * @package ApiX\Definition
  * @property RelationRule[] $rules
  */
 class Relation
@@ -79,8 +79,8 @@ class Relation
         $relationTypesMany = $this->getRelationTypesMultiple();
 
         $relationTypesAll = array_merge($relationTypes, $relationTypesMany);
-        /** @var API $apiClass */
-        $apiClass = app()->get(API::class);
+        /** @var ApiX $apiClass */
+        $apiClass = app()->get(ApiX::class);
 
         $collection = collect($items);
         //dd($collection);
@@ -227,11 +227,11 @@ class Relation
     }
 
     /**
-     * @return API
+     * @return ApiX
      */
     public function getAPI()
     {
-        return app()->get(API::class);
+        return app()->get(ApiX::class);
     }
 
     public function hasMany(Endpoint $api, RelationRule $rule, Endpoint $relation, $data, $ids)

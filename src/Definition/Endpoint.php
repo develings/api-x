@@ -2,7 +2,7 @@
 
 namespace ApiX\Definition;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\DynamoBuilder;
 use ApiX\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
@@ -146,7 +146,7 @@ class Endpoint
             $validators[] = Str::replaceFirst('validate_', '', Str::snake($validationMethod));
         }
 
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
 
         if ($api->base->db->driver === DB::DRIVER_DYNAMO_DB) {
             $validators = array_values(array_diff($validators, ([
@@ -239,7 +239,7 @@ class Endpoint
 
     public function getTableName(): string
     {
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
         $prefix = $api->base->db->prefix;
 
         $table = $this->db ?: $this->name;
@@ -279,7 +279,7 @@ class Endpoint
 
     public function fillDefaultValues(array $data, $originalData = [], $request = self::REQUEST_POST)
     {
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
         $isDynamoDb = $api->base->db->driver === DB::DRIVER_DYNAMO_DB;
         if ($this->timestamps && $request === self::REQUEST_POST) {
             $data['created_at'] = date('Y-m-d H:i:s');
@@ -472,7 +472,7 @@ class Endpoint
 
     public function getBuilder()
     {
-        $api = app()->get(API::class);
+        $api = app()->get(ApiX::class);
         $tableName = $api->base->getTableName($this);
 
         if ($api->base->db->driver === 'dynamoDB') {

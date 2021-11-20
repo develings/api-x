@@ -4,7 +4,7 @@ namespace ApiX\Definition;
 
 /**
  * Class Field
- * @package API\Definition
+ * @package ApiX\Definition
  * @property Rule[] $rules
  */
 class Field

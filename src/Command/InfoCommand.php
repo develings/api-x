@@ -2,7 +2,7 @@
 
 namespace ApiX\Command;
 
-use ApiX\API;
+use ApiX\ApiX;
 use Illuminate\Console\Command;
 
 class InfoCommand extends Command
@@ -19,14 +19,14 @@ class InfoCommand extends Command
      *
      * @var string
      */
-    protected $description = 'API Migrate';
+    protected $description = 'ApiX Migrate';
     
     public function handle()
     {
-        $api = API::getInstance();
+        $api = ApiX::getInstance();
         
         $this->line('');
-        $this->line('<info>API X</info> info:');
+        $this->line('<info>ApiX X</info> info:');
         $this->line('');
         
         $this->line('Swagger URL: ' . route('api.swagger'));

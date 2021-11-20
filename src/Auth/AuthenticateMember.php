@@ -2,7 +2,7 @@
 
 namespace ApiX\Auth;
 
-use ApiX\API;
+use ApiX\ApiX;
 use ApiX\Definition\Endpoint;
 use ApiX\Definition\EndpointPath;
 use Closure;
@@ -14,8 +14,8 @@ class AuthenticateMember
 {
     public function handle(Request $request, Closure $next)
     {
-        /** @var API $api */
-        $api = app()->get(API::class);
+        /** @var ApiX $api */
+        $api = app()->get(ApiX::class);
         
         $route = $request->route();
         if ($route instanceof Route) {
