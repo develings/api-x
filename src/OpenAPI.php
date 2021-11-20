@@ -43,8 +43,8 @@ class OpenAPI
         $data = [
             'openapi' => '3.0.2',
             'info' => [
-                'title' => config('app.name'),
-                'version' => config('app.version', '1.0.0')
+                'title' => $this->base->name ?: config('app.name'),
+                'version' => $this->base->version ?: config('app.version', '1.0.0')
             ],
             'servers' => $servers,
             'paths' => [],

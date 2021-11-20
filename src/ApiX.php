@@ -64,6 +64,8 @@ class ApiX
 
         $this->db = new Database($data);
         $this->base = new Base($data);
+        
+        return $this;
     }
 
     /**

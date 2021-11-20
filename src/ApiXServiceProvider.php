@@ -56,6 +56,6 @@ class ApiXServiceProvider extends ServiceProvider
     
     public function boot()
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'api');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'apix');
     }
 }

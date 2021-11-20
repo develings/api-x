@@ -58,7 +58,7 @@ class Routes
     
     public function getSwagger()
     {
-        return view('api::swagger', [
+        return view('apix::swagger', [
             'url' => route('api.openapi'),
         ]);
     }
