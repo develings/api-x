@@ -9,7 +9,7 @@ use ApiX\Command\MigrateCommand;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
-class APIServiceProvider extends ServiceProvider
+class ApiXServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.

@@ -101,7 +101,7 @@ php artisan api:make
 // add this to config/app.php
 'providers' => [
     ...
-    \ApiX\APIServiceProvider::class,
+    \ApiX\ApiXServiceProvider::class,
 ],
 
 // add this to AppServiceProvider.php in boot()
