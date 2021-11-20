@@ -1,8 +1,8 @@
 <?php
 
-namespace API\Auth;
+namespace ApiX\Auth;
 
-use API\API;
+use ApiX\API;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;

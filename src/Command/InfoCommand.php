@@ -1,8 +1,8 @@
 <?php
 
-namespace API\Command;
+namespace ApiX\Command;
 
-use API\API;
+use ApiX\API;
 use Illuminate\Console\Command;
 
 class InfoCommand extends Command

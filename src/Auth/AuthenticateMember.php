@@ -1,10 +1,10 @@
 <?php
 
-namespace API\Auth;
+namespace ApiX\Auth;
 
-use API\API;
-use API\Definition\Endpoint;
-use API\Definition\EndpointPath;
+use ApiX\API;
+use ApiX\Definition\Endpoint;
+use ApiX\Definition\EndpointPath;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;

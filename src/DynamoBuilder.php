@@ -1,8 +1,8 @@
 <?php
 
-namespace API;
+namespace ApiX;
 
-use API\Definition\Endpoint;
+use ApiX\Definition\Endpoint;
 use Illuminate\Pagination\Paginator;
 
 class DynamoBuilder extends \BaoPham\DynamoDb\DynamoDbQueryBuilder

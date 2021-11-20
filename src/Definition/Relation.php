@@ -1,11 +1,11 @@
 <?php
 
-namespace API\Definition;
+namespace ApiX\Definition;
 
-use API\API;
+use ApiX\API;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
-use API\Definition\Base;
+use ApiX\Definition\Base;
 
 /**
  * Class Relation

@@ -1,6 +1,6 @@
 <?php
 
-namespace API\Auth;
+namespace ApiX\Auth;
 
 use Illuminate\Http\Request;
 

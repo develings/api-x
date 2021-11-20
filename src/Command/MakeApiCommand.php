@@ -1,12 +1,12 @@
 <?php
 
-namespace API\Command;
+namespace ApiX\Command;
 
-use API\API;
-use API\Definition\DB;
-use API\DynamoDB\Migrator;
-use API\Model;
-use API\MySQL\Migrator as MySQLMigrator;
+use ApiX\API;
+use ApiX\Definition\DB;
+use ApiX\DynamoDB\Migrator;
+use ApiX\Model;
+use ApiX\MySQL\Migrator as MySQLMigrator;
 use Aws\AwsClient;
 use Illuminate\Support\Facades\App;
 use Illuminate\Console\Command;

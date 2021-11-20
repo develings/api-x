@@ -1,8 +1,8 @@
 <?php
 
-namespace API;
+namespace ApiX;
 
-use API\Definition\Base;
+use ApiX\Definition\Base;
 use Illuminate\Support\Facades\File;
 
 class OpenAPI

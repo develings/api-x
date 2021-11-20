@@ -1,6 +1,6 @@
 <?php
 
-namespace API\Definition;
+namespace ApiX\Definition;
 
 class DB
 {

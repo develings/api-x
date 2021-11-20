@@ -1,6 +1,6 @@
 <?php
 
-namespace API\DynamoDB;
+namespace ApiX\DynamoDB;
 
 /**
  * Class Table

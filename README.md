@@ -96,18 +96,19 @@ php artisan api:make
 ```
 
 ## Instantiate
+
 ```php
 // add this to config/app.php
 'providers' => [
     ...
-    \API\APIServiceProvider::class,
+    \ApiX\APIServiceProvider::class,
 ],
 
 // add this to AppServiceProvider.php in boot()
 Model::unguard();
 
 // add the route (e.g. routes/web.php)
-$api = new API\API(base_path('api.json'));
+$api = new ApiX\API(base_path('api.json'));
 $api->setRoutes();
 ``` 
 

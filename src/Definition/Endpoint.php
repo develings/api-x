@@ -1,10 +1,10 @@
 <?php
 
-namespace API\Definition;
+namespace ApiX\Definition;
 
-use API\API;
-use API\DynamoBuilder;
-use API\DynamoModel;
+use ApiX\API;
+use ApiX\DynamoBuilder;
+use ApiX\DynamoModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

@@ -1,6 +1,6 @@
 <?php
 
-namespace API;
+namespace ApiX;
 
 class Hydrator
 {

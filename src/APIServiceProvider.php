@@ -1,11 +1,11 @@
 <?php
 
-namespace API;
+namespace ApiX;
 
-use API\Command\InfoCommand;
-use API\Command\MakeApiCommand;
-use API\Command\MakeModelCommand;
-use API\Command\MigrateCommand;
+use ApiX\Command\InfoCommand;
+use ApiX\Command\MakeApiCommand;
+use ApiX\Command\MakeModelCommand;
+use ApiX\Command\MigrateCommand;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,8 +30,8 @@ class APIServiceProvider extends ServiceProvider
         $app = $this->app;
         
         $middlewares = [
-            'api.auth.member' => \API\Auth\AuthenticateMember::class,
-            'api.auth' => \API\Auth\Authenticate::class,
+            'api.auth.member' => \ApiX\Auth\AuthenticateMember::class,
+            'api.auth' => \ApiX\Auth\Authenticate::class,
         ];
         
         if ($app instanceof \Illuminate\Foundation\Application) {

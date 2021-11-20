@@ -1,8 +1,8 @@
 <?php
 
-namespace API\Definition;
+namespace ApiX\Definition;
 
-use API\API;
+use ApiX\API;
 
 trait RuleTrait
 {
@@ -53,7 +53,7 @@ trait RuleTrait
             }
 
             if ($name === 'unique') {
-                $api = \API\API::getInstance();
+                $api = \ApiX\API::getInstance();
                 $rules[] = 'unique:' . $api->base->getTableName($endpoint) . ',creator_id';
                 continue;
             }

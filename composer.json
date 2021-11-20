@@ -1,6 +1,7 @@
 {
     "name": "develings/api-x",
     "description": "Create a full-fledged API using a simple json file.",
+    "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
         "ext-dom": "*",
@@ -9,7 +10,7 @@
     },
     "autoload": {
         "psr-4": {
-            "API\\": "src/"
+            "ApiX\\": "src/"
         },
         "files": [
             "src/helpers.php"
@@ -23,7 +24,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "API\\APIServiceProvider"
+                "ApiX\\ApiXServiceProvider"
             ]
         }
     }

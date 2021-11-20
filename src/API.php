@@ -1,14 +1,12 @@
 <?php
 
-namespace API;
+namespace ApiX;
 
-use API\Definition\Base;
-use API\Definition\Endpoint;
-use API\Definition\Field;
-use API\DynamoDB\Migrator;
-use BaoPham\DynamoDb\DynamoDbQueryBuilder;
-use BaoPham\DynamoDb\Facades\DynamoDb;
-use BaoPham\DynamoDb\RawDynamoDbQuery;
+use ApiX\Definition\Base;
+use ApiX\Definition\Endpoint;
+use ApiX\Definition\Field;
+use ApiX\DynamoDB\Migrator;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
@@ -181,7 +179,7 @@ class API
         }
 
 
-        if ($this->base->db === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+        if ($this->base->db === \ApiX\Definition\DB::DRIVER_DYNAMO_DB) {
             $data = $query->paginate($perPage, $total = $query->count(), $endpoint);
         } else {
             $data = $query->paginate($perPage);
@@ -284,7 +282,7 @@ class API
     public function find(Endpoint $endpoint, $id, $identifierKey = null, $source = null)
     {
         $identifierKey = $identifierKey ?: $endpoint->getIdentifier();
-        if ($this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL) {
+        if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_MYSQL) {
             $model = DynamicModel::createInstance($this->base->getTableName($endpoint));
             $model->fillable(array_keys($endpoint->fields));
             //dd($model);
@@ -303,7 +301,7 @@ class API
         }
         $this->buildQuery($endpoint, $query, $source);
 
-        if ( $this->base->db->driver === \API\Definition\DB::DRIVER_MYSQL ) {
+        if ( $this->base->db->driver === \ApiX\Definition\DB::DRIVER_MYSQL ) {
             if ($endpoint->soft_deletes) {
                 $query->whereNull('deleted_at');
             }
@@ -317,7 +315,7 @@ class API
 
         //dd($query->toDynamoDbQuery(), $api);
 
-        if ( $first && $this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB && $endpoint->soft_deletes && $first->deleted_at ) {
+        if ( $first && $this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB && $endpoint->soft_deletes && $first->deleted_at ) {
             return null;
         }
 
@@ -425,7 +423,7 @@ class API
         //dd($data, $rules);
 
         // Check if a field is unique and then perform a query in the db
-        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+        if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB) {
             /** @var Field[] $fields */
             collect($endpoint->fields)->filter(static function(Field $item) {
                 return $item->isUnique();
@@ -722,7 +720,7 @@ class API
     {
         $tableName = $this->base->getTableName($endpoint);
 
-        if ($this->base->db->driver === \API\Definition\DB::DRIVER_DYNAMO_DB) {
+        if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB) {
             $model = DynamoModel::createInstance($tableName);
             $model->setKeyName($endpoint->getIdentifier());
             //$model = new DynamoBuilder($model);

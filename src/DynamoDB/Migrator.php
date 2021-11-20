@@ -1,9 +1,9 @@
 <?php
 
-namespace API\DynamoDB;
+namespace ApiX\DynamoDB;
 
-use API\API;
-use API\Definition\Base;
+use ApiX\API;
+use ApiX\Definition\Base;
 use Aws\AwsClient;
 use Aws\DynamoDb\DynamoDbClient;
 use Illuminate\Support\Facades\App;

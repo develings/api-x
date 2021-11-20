@@ -1,8 +1,8 @@
 <?php
 
-namespace API\Command;
+namespace ApiX\Command;
 
-use API\DynamoDB\Migrator;
+use ApiX\DynamoDB\Migrator;
 use Aws\AwsClient;
 use Illuminate\Support\Facades\App;
 use Illuminate\Console\Command;

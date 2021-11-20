@@ -1,10 +1,10 @@
 <?php
 
-namespace API\MySQL;
+namespace ApiX\MySQL;
 
-use API\API;
-use API\Definition\Endpoint;
-use API\Definition\Field;
+use ApiX\API;
+use ApiX\Definition\Endpoint;
+use ApiX\Definition\Field;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\Schema;
@@ -162,12 +162,12 @@ class Migrator
     }
     
     /**
-     * @param \API\Definition\Endpoint $table
+     * @param \ApiX\Definition\Endpoint $table
      * @param Blueprint $blueprint
      *
      * @return Blueprint
      */
-    private function create(\API\Definition\Endpoint $table, Blueprint $blueprint, $definitions)
+    private function create(\ApiX\Definition\Endpoint $table, Blueprint $blueprint, $definitions)
     {
         $fields = $table->fields;
         foreach ($fields as $key => $field) {
