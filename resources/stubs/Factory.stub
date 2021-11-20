@@ -1,0 +1,18 @@
+<?php
+
+dummyNamespace;
+dummyUse;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+
+class DummyClass extends Factory
+{
+	protected $model = dummyModel;
+
+	public function definition()
+	{
+		return [
+dummyFields
+		];
+	}
+}

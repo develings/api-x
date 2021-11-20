@@ -3,24 +3,24 @@
 namespace ApiX\Command;
 
 use ApiX\Facade\ApiX;
-use ApiX\Generate\Model;
+use ApiX\Generate\Factory;
 use Illuminate\Console\Command;
 
-class MakeModelCommand extends Command
+class MakeFactoryCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'api:make-model {--table=} {--force=false}';
+    protected $signature = 'api:make-factory {--table=} {--force=false}';
     
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Make model';
+    protected $description = 'Make factory';
     
     public function handle()
     {
@@ -29,7 +29,7 @@ class MakeModelCommand extends Command
         $api = ApiX::getInstance();
         
         $this->line('');
-        $this->line('<info>Creating</info> model class...');
+        $this->line('<info>Creating</info> factory class...');
         $this->line('');
         
         $tables = $tables ? explode(',', $tables) : [];
@@ -44,7 +44,7 @@ class MakeModelCommand extends Command
             $force = true;
         }
         
-        $creator = new Model();
+        $creator = new Factory();
         foreach ($tables as $table) {
             $endpoint = $api->getEndpoint($table);
             if (!$endpoint) {

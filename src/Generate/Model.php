@@ -1,6 +1,6 @@
 <?php
 
-namespace ApiX;
+namespace ApiX\Generate;
 
 use ApiX\Definition\Endpoint;
 use Illuminate\Support\Facades\File;
@@ -9,7 +9,7 @@ use ApiX\Facade\ApiX;
 
 class Model
 {
-    public function createModel(Endpoint $endpoint, bool $force = false)
+    public function create(Endpoint $endpoint, bool $force = false)
     {
         $definition = $endpoint->definition;
         $api = ApiX::getInstance();
@@ -17,10 +17,10 @@ class Model
         $path = base_path('app/Models/' . ucfirst(Str::camel($endpoint->name)) . '.php');
 
         if (!$force && File::exists($path)) {
-            //return false;
+            return false;
         }
 
-        $stub = File::get(__DIR__ . '/../resources/stubs/Model.stub');
+        $stub = File::get(__DIR__ . '/../../resources/stubs/Model.stub');
 
         $dynamicFields = '';
         $classProperties = '';

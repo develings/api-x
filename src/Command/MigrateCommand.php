@@ -21,7 +21,7 @@ class MigrateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'api:migrate {--table=} {--id=} {--user=} {--tag=true}  {--force=false}';
+    protected $signature = 'api:migrate {--table=} {--id=} {--user=} {--tag=true} {--force=false}';
     
     /**
      * The console command description.

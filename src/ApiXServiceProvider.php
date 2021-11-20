@@ -4,6 +4,7 @@ namespace ApiX;
 
 use ApiX\Command\InfoCommand;
 use ApiX\Command\MakeApiCommand;
+use ApiX\Command\MakeFactoryCommand;
 use ApiX\Command\MakeModelCommand;
 use ApiX\Command\MigrateCommand;
 use Illuminate\Routing\Router;
@@ -23,6 +24,7 @@ class ApiXServiceProvider extends ServiceProvider
             $this->commands([
                 MakeApiCommand::class,
                 MakeModelCommand::class,
+                MakeFactoryCommand::class,
                 MigrateCommand::class,
                 InfoCommand::class,
             ]);
@@ -30,7 +32,6 @@ class ApiXServiceProvider extends ServiceProvider
    
         $app = $this->app;
         
-        //$app->singleton('ApiX', ApiX::class);
         if (!$app->bound('ApiX')) {
             $app->bind('ApiX', function() {
                 return new ApiX();
