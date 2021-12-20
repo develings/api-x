@@ -5,10 +5,8 @@ namespace ApiX;
 use ApiX\Definition\Base;
 use ApiX\Definition\Endpoint;
 use ApiX\Definition\Field;
-use ApiX\DynamoDB\Migrator;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,15 +46,11 @@ class ApiX
     {
         $app = app();
         $app->instance(self::class, $this);
-
-        //if ($app->runningInConsole()) {
-        //    return $this->valid = false;
-        //}
-
+        
         abort_unless(file_exists($path), 501, "ApiX json file not found ($path)");
 
         $data = file_get_contents($path);
-        $data = json_decode($data, 1);
+        $data = json_decode($data, 1, 512, JSON_THROW_ON_ERROR);
 
         abort_unless($data, 505, "ApiX JSON file ($path) is invalid: " . json_last_error_msg());
 
@@ -76,41 +70,9 @@ class ApiX
         return $this;
     }
 
-    public function do()
-	{
-		// Read the json files and extract every section of it and add to the laravel application
-		// Read database stuff
-		//$data = file_get_contents(base_path('api/app.json'));
-		//$data = json_decode($data, 1);
-        //
-		//$this->definition = $data;
-
-		//$db = new Database($data);
-		//$db->do();
-
-		//dd($data, json_last_error(), json_last_error_msg());
-	}
-
-	public function migrate()
-    {
-        if ($this->base->db->driver === Definition\DB::DRIVER_DYNAMO_DB) {
-            $migration = new Migrator();
-            dd($migration->migrate($this->base));
-        }
-
-        dd('mysq');
-    }
-
-	//public function setModels()
-    //{
-    //    $model = new Model($this->definition);
-    //    $model->createModel($this->definition['api'][0]);
-    //}
-
     public function openApiJson()
     {
-        $openAPI = new OpenAPI($this->base);
-        return $openAPI->definition();
+        return (new OpenAPI($this->base))->definition();
     }
 
 	public function setRoutes()
@@ -144,7 +106,6 @@ class ApiX
         abort_unless($endpoint, 404);
 
         $perPage = $request->get('per_page', $endpoint->per_page ?? 25);
-        $offset = $request->get('offset');
 
         /** @var DynamoBuilder|Builder $query */
         $query = $this->getBuilder($endpoint);
@@ -156,7 +117,6 @@ class ApiX
         if ($endpoint->soft_deletes) {
             $query->where(static function($query) {
                 $query->whereNull('deleted_at');
-                //$query->orWhereNull('deleted_at');
             });
         }
 
@@ -173,11 +133,6 @@ class ApiX
                 $query->$method($field, 'like',  '%' . $search . '%');
                 $i++;
             }
-        }
-
-        if ($offset) {
-            //$query->afterKey(['uuid' => $offset, 'created_at' => '2020-08-17 13:50:19']);
-            //dd($query->toDynamoDbQuery(), $query->get());
         }
 
 
@@ -204,41 +159,9 @@ class ApiX
 
     public function getWhereParameters($query, Endpoint $api)
     {
-        //dd($query, $query->toDynamoDbQuery(), $query->get());
         if (!$api->condition) {
             return $query;
         }
-
-        //return $query;
-
-        //$model = $query->getModel();
-        //$query->setModel($model);
-        //$result = DynamoDb::table($this->base->getTableName($api))
-        //    ->setIndexName('device_user_uuid_index')
-        //    // call set<key_name> to build the query body to be sent to AWS
-        //                  ->setKeyConditionExpression('#name = :name')
-        //                    //->setProjectionExpression('device_user_uuid, created_at')
-        //                  ->setExpressionAttributeNames(['#name' => 'device_user_uuid'])
-        //                  ->setExpressionAttributeValues([':name' => DynamoDb::marshalValue('019e98c9-384f-396c-8633-4c473c84a743')])
-        //                  ->prepare()
-        //    // the query body will be sent upon calling this.
-        //                  ->query(); // supports any DynamoDbClient methods (e.g. batchWriteItem, batchGetItem, etc.)
-        //
-        //dd($result);
-        //
-        ////dd($this->base->getTableName($api));
-        //$result = DynamoDb::table($this->base->getTableName($api))
-        //                  ->setIndex('device_user_uuid_index')
-        //        ->setKeyConditionExpression('#name = :name')
-        //        ->setProjectionExpression('id, author_name')
-        //    //// Can set the attribute mapping one by one instead
-        //    //    ->setExpressionAttributeName('#name', 'author_name')
-        //    //    ->setExpressionAttributeValue(':name', DynamoDb::marshalValue('Bao'))
-        //                  ->prepare()
-        //                  ->query();
-        //
-        //dd($this->base->getTableName($api), $result);
-
 
         $where = $api->condition;
         $where = is_array($where) ? $where : [$where];
@@ -248,37 +171,13 @@ class ApiX
 
         foreach ($where as $item) {
             [$type, $condition] = explode(':', $item);
-            //$userInfo = $this->user->toArray();
-            //$condition = str_replace('user.uuid', $this->user->uuid, $condition);
             $condition = str_replace($userPlaceholdersKeys, $userPlaceholdersValues, $condition);
             $e = explode(',', $condition);
 
             $query->$type(...$e);
         }
-        //$query->decorate(function (RawDynamoDbQuery $raw) {
-        //    $raw->op = 'Query';
-        //    //$raw->query['KeyConditionExpression'] = $raw->query['FilterExpression'];
-        //    //unset($raw->query['FilterExpression']);
-        //});
-        /** @var DynamoDbQueryBuilder $query */
-        //$query->withIndex('device_user_uuid_index');
-
-
-        //dd($query->get());
-        //dd($query, $model, $query->toDynamoDbQuery(), $query->get());
-
-        //
-
-
-
+        
         return $query;
-
-        //$where = str_replace(':user.uuid:', ':user')
-
-        //return [
-        //    $where,
-        //    ['user.id' => $this->user->uuid]
-        //];
     }
 
     public function find(Endpoint $endpoint, $id, $identifierKey = null, $source = null)
@@ -287,7 +186,6 @@ class ApiX
         if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_MYSQL) {
             $model = DynamicModel::createInstance($this->base->getTableName($endpoint));
             $model->fillable(array_keys($endpoint->fields));
-            //dd($model);
         } else {
             $model = $this->getBuilder($endpoint);
         }
@@ -312,18 +210,9 @@ class ApiX
             $first = $query->get()->first();
         }
 
-        // find out if fetching user of entity
-        //dd($endpoint, $id, $identifierKey, $query->getQuery()->toSql(), $first);
-
-        //dd($query->toDynamoDbQuery(), $api);
-
         if ( $first && $this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB && $endpoint->soft_deletes && $first->deleted_at ) {
             return null;
         }
-
-        //if (!$first) {
-        //    dd($first, $id, $identifierKey, $source, $query->getQuery()->toSql());
-        //}
 
         return $first;
     }
@@ -386,26 +275,16 @@ class ApiX
         /** @var Endpoint $endpoint */
         $endpoint = $this->getEndpoint($name);
         abort_unless($endpoint, 404);
-
-        //$endpoint->create->triggerAfter();
-
+        
         // Check permission if enabled
 
         // Validate the data from within api fields
         $rules = $endpoint->getValidationRules(Endpoint::REQUEST_POST);
-
-        //dd($api, $rules);
-        // go through all the columns and also validate the data
-        //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
-        //$rules = $api->fields;
-
-
+        
         $requestData = $request->post();
 
         $data = $endpoint->fillDefaultValues($requestData, [], Endpoint::REQUEST_POST);
-
-        //dd($data, $rules);
-
+        
         $validation = Validator::make($data, $rules);
         if ($validation->fails()) {
             $response = [
@@ -417,13 +296,7 @@ class ApiX
         }
 
         $data = $validation->validated();
-
-        if ($endpoint->unique) {
-            //
-        }
-
-        //dd($data, $rules);
-
+        
         // Check if a field is unique and then perform a query in the db
         if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB) {
             /** @var Field[] $fields */
@@ -457,9 +330,7 @@ class ApiX
             $fillables = $model->getFillable();
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
-
-            //dd($model, $data, $fillables);
-
+            
             $model->saveOrFail();
             $id = $model->{$endpoint->getIdentifier()};
 
@@ -497,18 +368,10 @@ class ApiX
         // Check permission if enabled
 
         // Validate the data from within api fields
-
-        //$instance = $this->createModelInstance($this->getEndpoint('device_user'));
-        //$foreignKey = 'id';
-        //$localKey = 'device_user_id';
-        //$r = new BelongsTo($instance->newQuery(), $entity, 'device_user_id', 'id', 'device_user');
-        //dd($r->getQuery()->toSql(), $r->get());
+        
         $rules = $endpoint->getValidationRules(Endpoint::REQUEST_PUT);
-        //dd($rules);
 
         // go through all the columns and also validate the data
-        //$rules = ['name' => 'required', 'uid' => 'uuid']; // get the rules from the api definition
-        //$rules = $api->fields;
 
         $validation = Validator::make($request->post(), $rules);
         if ($validation->fails()) {
@@ -522,23 +385,20 @@ class ApiX
 
         $data = $validation->validated();
 
-        //dd($data, $rules);
         abort_unless($data, 400, 'No data set');
 
         $model = $this->createModelInstance($endpoint);
-
 
         if (method_exists($entity, 'toArray')) {
             $entityData = $entity->toArray();
         } else {
             $entityData = (array) $entity;
         }
-        //$data = array_merge($entityData, $data);
+        
         // compare and only fill data that is empty
         $data = $endpoint->fillDefaultValues($data, $entityData, Endpoint::REQUEST_PUT);
 
         // Unset values that should be unchangeable like ID
-        //unset($data[$api->getIdentifier()]);
 
         if ($endpoint->timestamps) {
             $data['updated_at'] = date('Y-m-d H:i:s');
@@ -546,11 +406,6 @@ class ApiX
 
         if ($model) {
             $entity->fillable($endpoint->getFieldNames());
-            if ($model->getFillable()) {
-                //$data = array_intersect_key($data, array_flip($model->getFillable()));
-            }
-            //dd($entity, $data);
-            //dd($data);
             $entity->update($data);
         } else {
             DB::table($endpoint->getTableName())
@@ -580,8 +435,6 @@ class ApiX
 
         // Distinguish between model and normal db
 
-        //$model = $api->createModelInstance();
-        //dd($entity);
 
         // compare and only fill data that is empty
         //$data = $api->fillDefaultValues($data);
@@ -593,14 +446,8 @@ class ApiX
         $entityArray = $model->toArray();
 
         if ($model) {
-            //$data = array_intersect_key($data, array_flip($model->getFillable()));
-            //$model->fill($data);
-            //
             $model->fillable($endpoint->getFieldNames());
-            //dd($entity, $method, $data);
             $affected = $model->$method($data);
-            //$modelId = $model->{$api->identifier};
-            //dd('missing');
         } else {
             $query = DB::table($endpoint->getTableName())
                        ->where($endpoint->getIdentifier(), $id);
@@ -679,7 +526,6 @@ class ApiX
 
             if ($fieldsToShow) {
                 $item = array_intersect_key($item, array_flip($fieldsToShow));
-                //die(var_dump($fieldsToShow));
             }
 
             $items[] = $item;
@@ -757,15 +603,10 @@ class ApiX
         if (is_object($data)) {
             $data = (array) $data;
         }
-
-        //$data = $api->dataHydrate($entity);
-
+        
         $data = $api->dataHydrate($data, $request);
 
         return $api->addRelations($data, $request->get('with'));
-        //$data = $api->dataHydrate($entity);
-        //
-        //return $api->addRelations($data, $request->get('with'));
     }
 
     /**
