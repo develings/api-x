@@ -16,11 +16,6 @@ This package is still under heavy development and may contain breaking changes w
 ### About
 Create a full-fledged API only using a simple JSON file.
 
-### TODO
-- [ ] Pagination
-- [ ] Search
-- [ ] 
-
 #### Search
 Search should be easy
 
@@ -103,9 +98,6 @@ php artisan api:make
     ...
     \ApiX\ApiXServiceProvider::class,
 ],
-
-// add this to AppServiceProvider.php in boot()
-Model::unguard();
 
 // add the route (e.g. routes/web.php)
 $api = new ApiX\ApiX(base_path('api.json'));
