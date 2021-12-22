@@ -78,7 +78,7 @@ class ApiX
 	public function setRoutes()
     {
         if (!$this->valid) {
-            return;
+            return $this;
         }
 
         $prefix = $this->base->endpoint ?: '';
@@ -96,6 +96,8 @@ class ApiX
             Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\ApiX\Routes@put']);
             Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\ApiX\Routes@delete']);
         });
+        
+        return $this;
     }
 
 

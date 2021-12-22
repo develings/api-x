@@ -1,13 +1,11 @@
 <?php
 
-use ApiX\Facade\ApiX;
 use function Pest\Laravel\get;
+use function Pest\Laravel\post;
+use function Pest\Laravel\put;
 
 beforeEach(function() {
-    ApiX::load(__DIR__ . '/../../examples/simple.json');
-    \Illuminate\Support\Facades\Artisan::call('api:migrate');
-    
-    ApiX::getInstance()->setRoutes();
+    setupApiX();
 });
 
 it('should be able to run a test', function () {
@@ -28,3 +26,42 @@ it('make sure not existing route fails with 403', function() {
 it('make sure not existing route fails with 404', function() {
     get('/api/v1/not')->assertStatus(404);
 });
+
+it('updates user data', function() {
+    
+    \Illuminate\Support\Facades\DB::table('user')->insert([
+        'username' => $username = 'teesting',
+        'email' => 'testing@testing.testing',
+        'api_key' => $apiKey = \Illuminate\Support\Str::random(32)
+    ]);
+    
+    $user = \Illuminate\Support\Facades\DB::table('user')->where('username', $username)->first();
+    
+    $response = put('/api/v1.0/user/' . $user->id . '?api_key=' . $apiKey, [
+        'username' => 'updated',
+    ]);
+    
+    $response->assertOk();
+    $response->assertJsonFragment([
+        'username' => 'updated'
+    ]);
+});
+
+it('creates user', function() {
+    
+    $post = post('/api/v1.0/user', [
+        'username' => $username = 'teesting',
+        'email' => 'testing@testing.testing',
+    ]);
+    
+    $post->assertOk();
+    $post->assertJsonFragment([
+        'username' => $username
+    ]);
+    
+    /** @var stdClass $user */
+    $user = \Illuminate\Support\Facades\DB::table('user')->where('username', $username)->first();
+    
+    expect($user->username)->toBe($username);
+});
+

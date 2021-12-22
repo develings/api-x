@@ -10,7 +10,7 @@
     "key": "env:APP_KEY",
     "db": {
         "driver": "mysql",
-        "prefix": "api_"
+        "prefix": ""
     },
     "servers": [
         { "url": "http://localhost" },
@@ -23,12 +23,17 @@
             "soft_deletes": true,
             "fields": {
                 "id": "id",
-                "email": "email|unique|nullable",
+                "email": "email|unique",
+                "username": "string|unique|nullable",
                 "password": "password|nullable|hash",
+                "api_key": "string|nullable|default:alphanumeric,32|unique|index",
                 "last_active_at": "datetime|nullable"
             },
             "index": {
                 "authentication": "guest"
+            },
+            "create": {
+                "authentication": "none"
             }
         }
     ]

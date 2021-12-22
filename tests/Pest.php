@@ -11,7 +11,9 @@
 |
 */
 
- uses(Tests\TestCase::class)->in('Feature');
+use ApiX\Facade\ApiX;
+
+uses(Tests\TestCase::class)->in('Feature');
 
 /*
 |--------------------------------------------------------------------------
@@ -42,4 +44,12 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+
+function setupApiX() {
+    ApiX::load(__DIR__ . '/../examples/simple.json');
+    \Illuminate\Support\Facades\Artisan::call('api:migrate');
+    
+    ApiX::getInstance()->setRoutes();
 }

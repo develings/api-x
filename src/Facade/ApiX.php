@@ -2,15 +2,17 @@
 
 namespace ApiX\Facade;
 
+use ApiX\Definition\Endpoint;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method load(string $file)
- * @method openApiJson()
- * @method setRoutes()
- * @method getApis()
- * @method getUser()
- * @method getEndpoint(string $name)
+ * @method \ApiX\ApiX load(string $file)
+ * @method array openApiJson()
+ * @method \ApiX\ApiX setRoutes()
+ * @method Endpoint[] getApis()
+ * @method User getUser()
+ * @method Endpoint getEndpoint(string $name)
  */
 class ApiX extends Facade
 {
