@@ -21,6 +21,7 @@
             "name": "user",
             "timestamps": true,
             "soft_deletes": true,
+            "namespace": "Examples\\User",
             "fields": {
                 "id": "id",
                 "email": "email|unique",
@@ -33,6 +34,19 @@
                 "authentication": "guest"
             },
             "create": {
+                "authentication": "guest"
+            }
+        },
+
+        {
+            "name": "team",
+            "timestamps": true,
+            "soft_deletes": true,
+            "fields": {
+                "id": "id",
+                "name": "string"
+            },
+            "index": {
                 "authentication": "guest"
             }
         }

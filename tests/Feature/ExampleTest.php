@@ -8,10 +8,6 @@ beforeEach(function() {
     setupApiX();
 });
 
-it('should be able to run a test', function () {
-    expect(true)->toBe(true);
-});
-
 it('initialize api x and not fail', function() {
     $response = get('/api/v1.0/user');
     $response->assertStatus(200)

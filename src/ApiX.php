@@ -82,21 +82,9 @@ class ApiX
         }
 
         $prefix = $this->base->endpoint ?: '';
-
-        Route::group(['prefix' => $prefix, 'as' => 'api'], static function() {
-            Route::get('api.json', ['as' => '.openapi', 'uses' => '\ApiX\Routes@getOpenApiJson']);
-            Route::get('swagger', ['as' => '.swagger', 'uses' => '\ApiX\Routes@getSwagger']);
-        });
-
-        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function() {
-            Route::get('migrate', ['as' => '.migrate', 'uses' => '\ApiX\Routes@migrate']); //
-            Route::get('{api}', ['as' => '.index', 'uses' => '\ApiX\Routes@index']);
-            Route::post('{api}', ['as' => '.post', 'uses' => '\ApiX\Routes@post']);
-            Route::get('{api}/{id}', ['as' => '.get', 'uses' => '\ApiX\Routes@get']);
-            Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\ApiX\Routes@put']);
-            Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\ApiX\Routes@delete']);
-        });
-        
+    
+        $this->generateRoutes($prefix);
+    
         return $this;
     }
 
@@ -570,11 +558,7 @@ class ApiX
     {
         $tableName = $this->base->getTableName($endpoint);
 
-        if ($this->base->db->driver === \ApiX\Definition\DB::DRIVER_DYNAMO_DB) {
-            $model = DynamoModel::createInstance($tableName);
-            $model->setKeyName($endpoint->getIdentifier());
-            //$model = new DynamoBuilder($model);
-        } elseif (class_exists($endpoint->getModelClassNamespace())) {
+        if (class_exists($endpoint->getModelClassNamespace())) {
             $model = $endpoint->createModelInstance();
         } else {
             $model = DynamicModel::createInstance($tableName);
@@ -632,5 +616,27 @@ class ApiX
     public function setUser($user)
     {
         $this->user = $user;
+    }
+    
+    /**
+     * @param string $prefix
+     *
+     * @return void
+     */
+    private function generateRoutes(string $prefix): void
+    {
+        Route::group(['prefix' => $prefix, 'as' => 'api'], static function () {
+            Route::get('api.json', ['as' => '.openapi', 'uses' => '\ApiX\Routes@getOpenApiJson']);
+            Route::get('swagger', ['as' => '.swagger', 'uses' => '\ApiX\Routes@getSwagger']);
+        });
+        
+        Route::group(['prefix' => $prefix, 'middleware' => 'api.auth.member', 'as' => 'api'], static function () {
+            Route::get('migrate', ['as' => '.migrate', 'uses' => '\ApiX\Routes@migrate']); //
+            Route::get('{api}', ['as' => '.index', 'uses' => '\ApiX\Routes@index']);
+            Route::post('{api}', ['as' => '.post', 'uses' => '\ApiX\Routes@post']);
+            Route::get('{api}/{id}', ['as' => '.get', 'uses' => '\ApiX\Routes@get']);
+            Route::put('{api}/{id}', ['as' => '.put', 'uses' => '\ApiX\Routes@put']);
+            Route::delete('{api}/{id}', ['as' => '.delete', 'uses' => '\ApiX\Routes@delete']);
+        });
     }
 }

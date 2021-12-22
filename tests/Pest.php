@@ -53,3 +53,16 @@ function setupApiX() {
     
     ApiX::getInstance()->setRoutes();
 }
+
+/**
+ * @return stdClass
+ */
+function createValidUser() {
+    $id = \Illuminate\Support\Facades\DB::table('user')->insertGetId([
+        'email' => 'valid@user.user',
+        'username' => 'valid.' . time(),
+        'api_key' => \Illuminate\Support\Str::random(32)
+    ]);
+    
+    return \Illuminate\Support\Facades\DB::table('user')->find($id);
+}

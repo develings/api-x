@@ -102,6 +102,8 @@ class Endpoint
      * @var EndpointPath|false
      */
     public $get;
+    
+    public $namespace;
 
     public function __construct(array $data)
     {
@@ -258,6 +260,12 @@ class Endpoint
      */
     public function getModelClassNamespace()
     {
+        if ($this->namespace) {
+            throw_unless(class_exists($this->namespace), 'RuntimeException', 'Namespace not found: ' . $this->namespace);
+            
+            return $this->namespace;
+        }
+        
         return "App\\Models\\" . ucfirst(Str::camel($this->name));
     }
 
