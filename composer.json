@@ -3,7 +3,7 @@
     "description": "Create a full-fledged API using a simple json file.",
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.0.2",
         "ext-dom": "*",
         "ext-json": "*",
         "hashids/hashids": "^4.0",

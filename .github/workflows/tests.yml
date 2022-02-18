@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.1']
+        php: ['8.0', '8.1']
         stability: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - ${{ matrix.stability }}
@@ -49,9 +49,13 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis, memcached
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis-phpredis/phpredis@5.3.5, igbinary, msgpack, lzf, zstd, lz4, memcached
+          ini-values: error_reporting=E_ALL
           tools: composer:v2
           coverage: none
+        env:
+          REDIS_CONFIGURE_OPTS: --enable-redis --enable-redis-igbinary --enable-redis-msgpack --enable-redis-lzf --with-liblzf --enable-redis-zstd --with-libzstd --enable-redis-lz4 --with-liblz4
+          REDIS_LIBS: liblz4-dev, liblzf-dev, libzstd-dev
 
       - name: Set Minimum PHP 8.0 Versions
         uses: nick-invision/retry@v1
@@ -66,7 +70,7 @@ jobs:
         with:
           timeout_minutes: 5
           max_attempts: 5
-          command: composer require symfony/symfony:5.4.x-dev league/commonmark:^2.0.2 phpunit/phpunit:^9.5.8 --no-interaction --no-update
+          command: composer require ramsey/collection:^1.2 brick/math:^0.9.3 --no-interaction --no-update
         if: matrix.php >= 8.1
 
       - name: Install dependencies
