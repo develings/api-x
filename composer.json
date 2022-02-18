@@ -3,11 +3,11 @@
     "description": "Create a full-fledged API using a simple json file.",
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^8.1",
         "ext-dom": "*",
         "ext-json": "*",
         "hashids/hashids": "^4.0",
-        "laravel/framework": "^7.0 || ^8.0"
+        "laravel/framework": "^9.0"
     },
     "autoload": {
         "psr-4": {
@@ -26,15 +26,20 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
-        "pestphp/pest": "^1.20",
-        "pestphp/pest-plugin-laravel": "^1.1",
-        "orchestra/testbench": "^5.12.1 || ^6.7.2"
+        "pestphp/pest": "^v1.21",
+        "pestphp/pest-plugin-laravel": "^v1.2.0",
+        "orchestra/testbench": "^7.0"
     },
     "extra": {
         "laravel": {
             "providers": [
                 "ApiX\\ApiXServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
     }
 }
