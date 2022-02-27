@@ -11,6 +11,8 @@ class EndpointPath
     public $fill;
 
     public $after;
+    
+    public $before;
 
     public $hydrate;
 
@@ -21,6 +23,11 @@ class EndpointPath
                 $this->$k = $value;
             }
         }
+    }
+    
+    public function triggerBefore()
+    {
+        return $this->trigger($this->before, func_get_args());
     }
 
     public function triggerAfter()

@@ -110,7 +110,7 @@ class ApiX
             });
         }
 
-        $query = $this->getWhereParameters($query, $endpoint);
+        $query = $this->getWhereParameters($query, $endpoint, self::MODE_INDEX);
 
         $search = $request->get('search');
         if ($search && $endpoint->searchable) {
@@ -147,13 +147,22 @@ class ApiX
         return $output;
     }
 
-    public function getWhereParameters($query, Endpoint $api)
+    public function getWhereParameters($query, Endpoint $api, string $mode = null)
     {
-        if (!$api->condition) {
+        $where = [];
+        if ($api->condition) {
+            $where = is_array($api->condition) ? $api->condition : [$api->condition];
+        }
+        
+        if ($mode && isset($api->$mode->where)) {
+            $modeWhere = is_array($api->$mode->where) ? $api->$mode->where : [$api->$mode->where];
+            $where = array_merge($where, $modeWhere);
+        }
+        
+        if (!$where) {
             return $query;
         }
 
-        $where = $api->condition;
         $where = is_array($where) ? $where : [$where];
         $userPlaceholders = $this->getUserPlaceholders();
         $userPlaceholdersKeys = array_keys($userPlaceholders);
@@ -187,7 +196,7 @@ class ApiX
         }
 
         if ($source !== 'auth') {
-            $query = $this->getWhereParameters($query, $endpoint);
+            $query = $this->getWhereParameters($query, $endpoint, $source);
         }
         $this->buildQuery($endpoint, $query, $source);
 
@@ -216,6 +225,12 @@ class ApiX
                 $replacements['$user.' . $key] = $val;
             }
         }
+        
+        $request = request();
+        $requestData = $request->all();
+        foreach($requestData as $key => $val) {
+            $replacements['$request.' . $key] = $val;
+        }
 
         return $replacements;
     }
@@ -231,13 +246,13 @@ class ApiX
         }
 
         $find = is_array($endpoint->find) ? $endpoint->find : [$endpoint->find];
+    
+        // user
+        $replacements = $this->getUserPlaceholders();
 
         foreach ($find as $item) {
             $parts = explode(':', $item);
             $method = array_shift($parts);
-
-            // user
-            $replacements = $this->getUserPlaceholders();
 
             $parts = str_replace(array_keys($replacements), array_values($replacements), $parts[0]);
             $params = explode(',', $parts);
@@ -294,7 +309,7 @@ class ApiX
                 return $item->isUnique();
             })->each(function($field) use($data, $endpoint) {
                 abort_if(
-                    isset($data[$field->key]) && $this->find($endpoint, $data[$field->key], $field->key),
+                    isset($data[$field->key]) && $this->find($endpoint, $data[$field->key], $field->key, self::MODE_POST),
                     409,
                     sprintf('Entity with given field (%s) value already exists.', $field->key)
                 );
@@ -315,11 +330,17 @@ class ApiX
             $exists = $query->first();
             abort_if($exists, 409, 'Entity exists');
         }
-
+        
         if ($model) {
             $fillables = $model->getFillable();
             $data = $fillables ? array_intersect_key($data, array_flip($fillables)) : $data;
             $model->fill($data);
+    
+            if (isset($endpoint->create->before)) {
+                $model = $endpoint->create->triggerBefore($model, $data);
+                
+                abort_if(!($model instanceof Model), 500, 'TriggerBefore did not return a model: ' . $endpoint->create->before);
+            }
             
             $model->saveOrFail();
             $id = $model->{$endpoint->getIdentifier()};
@@ -352,7 +373,7 @@ class ApiX
         $endpoint = $this->getEndpoint($name);
         abort_unless($endpoint, 404);
 
-        $entity = $this->find($endpoint, $id);
+        $entity = $this->find($endpoint, $id, null, self::MODE_PUT);
         abort_unless($entity, 404);
 
         // Check permission if enabled
@@ -420,7 +441,7 @@ class ApiX
         $endpoint = $this->getEndpoint($name);
         abort_unless($endpoint, 404);
 
-        $model = $this->find($endpoint, $id);
+        $model = $this->find($endpoint, $id, null, self::MODE_DELETE);
         abort_unless($model, 404);
 
         // Distinguish between model and normal db
