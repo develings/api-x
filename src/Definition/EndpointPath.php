@@ -46,7 +46,7 @@ class EndpointPath
             return null;
         }
 
-        if (strpos($expression, '@') === false) {
+        if ( !str_contains($expression, '@') ) {
             abort(501, sprintf('Method is missing in %s', $expression));
         }
 
